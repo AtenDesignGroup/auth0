@@ -63,8 +63,25 @@ class AuthController extends ControllerBase {
   const AUTH0_SECRET_ENCODED = 'auth0_secret_base64_encoded';
   const AUTH0_OFFLINE_ACCESS = 'auth0_allow_offline_access';
 
+  /**
+   * The event dispatcher.
+   *
+   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
+   */
   protected $eventDispatcher;
+
+  /**
+   * The temp store.
+   *
+   * @var \Drupal\Core\TempStore\PrivateTempStore
+   */
   protected $tempStore;
+
+  /**
+   * The current session.
+   *
+   * @var \Drupal\Core\Session\SessionManagerInterface
+   */
   protected $sessionManager;
 
   /**
@@ -328,7 +345,7 @@ class AuthController extends ControllerBase {
       $states = [];
     }
     $nonce = $sessionStateHandler->issue();
-    $states[$nonce] = $returnTo === NULL ? '' : $returnTo;
+    $states[$nonce] = $returnTo ?? NULL;
     $this->tempStore->set(AuthController::STATE, $states);
 
     return $nonce;
@@ -792,7 +809,7 @@ class AuthController extends ControllerBase {
           $this->auth0Logger->notice('skipping mapping handled already by Auth0 module ' . $mapping);
         }
         else {
-          $value = isset($userInfo[$mapping[0]]) ? $userInfo[$mapping[0]] : '';
+          $value = $userInfo[$mapping[0]] ?? '';
           $current_value = $user->get($key)->value;
           if ($current_value === $value) {
             $this->auth0Logger->notice('value is unchanged ' . $key);
@@ -822,7 +839,7 @@ class AuthController extends ControllerBase {
     $auth0_claim_to_use_for_role = $this->config->get('auth0_claim_to_use_for_role');
 
     if (isset($auth0_claim_to_use_for_role) && !empty($auth0_claim_to_use_for_role)) {
-      $claim_value = isset($userInfo[$auth0_claim_to_use_for_role]) ? $userInfo[$auth0_claim_to_use_for_role] : '';
+      $claim_value = $userInfo[$auth0_claim_to_use_for_role] ?? '';
       $this->auth0Logger->notice('claim_value ' . print_r($claim_value, TRUE));
 
       $claim_values = [];
@@ -1029,7 +1046,10 @@ class AuthController extends ControllerBase {
    * @throws \Auth0\SDK\Exception\CoreException
    *   Exception thrown when validating email.
    *
-   * @deprecated v8.x-2.4 - the legacy send_verification_email endpoint itself is being deprecated and should no longer be called.
+   * @deprecated in auth0:8.x-2.4 and is removed from auth0:3.0.0. We need to
+   * find an alternative for this.
+   *
+   * @see https://www.drupal.org/project/auth0/issues/3292420
    */
   // phpcs:ignore
   public function verify_email(Request $request) {

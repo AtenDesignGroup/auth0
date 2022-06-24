@@ -29,14 +29,67 @@ class AuthHelper {
   const AUTH0_SECRET_ENCODED = 'auth0_secret_base64_encoded';
   const AUTH0_OFFLINE_ACCESS = 'auth0_allow_offline_access';
 
+  /**
+   * The Logger service.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   */
   private $logger;
+
+  /**
+   * The module configuration.
+   *
+   * @var \Drupal\Core\Config\ImmutableConfig
+   */
   private $config;
+
+  /**
+   * Auth0 domain.
+   *
+   * @var array|mixed|null
+   */
   private $domain;
+
+  /**
+   * Auth0 custom domain.
+   *
+   * @var array|mixed|null
+   */
   private $customDomain;
+
+  /**
+   * Auth0 client ID.
+   *
+   * @var array|mixed|null
+   */
   private $clientId;
+
+  /**
+   * Auth0 client secret.
+   *
+   * @var array|mixed|null
+   */
   private $clientSecret;
+
+  /**
+   * Auth0 SSO redirect.
+   *
+   * @var array|mixed|null
+   */
   private $redirectForSso;
+
+  /**
+   * Auth0 JWT signing algorithm.
+   *
+   * @var array|mixed|null
+   */
   private $auth0JwtSignatureAlg;
+
+  /**
+   * Auth0 secret encoded.
+   *
+   * @var bool
+   */
   private $secretBase64Encoded;
 
   /**
