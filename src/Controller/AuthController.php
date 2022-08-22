@@ -7,14 +7,6 @@ namespace Drupal\auth0\Controller;
  * Contains \Drupal\auth0\Controller\AuthController.
  */
 
-// Create a variable to store the path to this module.
-// Load vendor files if they exist.
-define('AUTH0_PATH', drupal_get_path('module', 'auth0'));
-
-if (file_exists(AUTH0_PATH . '/vendor/autoload.php')) {
-  require_once AUTH0_PATH . '/vendor/autoload.php';
-}
-
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\user\Entity\User;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
