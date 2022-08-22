@@ -134,8 +134,6 @@ class AuthHelper {
    * @throws InvalidTokenException
    */
   public function getUserUsingRefreshToken($refreshToken) {
-    global $base_root;
-
     $auth0Api = new Authentication($this->getAuthDomain(), $this->clientId, $this->clientSecret);
 
     try {
