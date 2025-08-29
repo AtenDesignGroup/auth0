@@ -2,84 +2,6 @@
     "name": "drupal/auth0",
     "type": "drupal-module",
     "license": "MIT",
-    "description": "Single Sign On for Enterprises + Social Login + User/Passwords. For all your Drupal instances. Powered by Auth0.",
-    "require": {
-        "auth0/auth0-php": "^8.3",
-        "php-http/guzzle6-adapter": "^2"
-    },
-    "require-dev": {
-        "composer/installers": "^1.9",
-        "drupal/core-recommended": "^9",
-        "drupal/core-dev": "^9",
-        "drupal/core-composer-scaffold": "^9"
-    },
-    "prefer-stable": true,
-    "config": {
-        "bin-dir": "bin/",
-        "preferred-install": {
-            "*": "dist"
-        },
-        "sort-packages": true,
-        "allow-plugins": {
-            "composer/installers": true,
-            "cweagans/composer-patches": true,
-            "drupal/core-composer-scaffold": true,
-            "dealerdirect/phpcodesniffer-composer-installer": true,
-            "php-http/discovery": true
-        }
-    },
-    "repositories": [
-        {
-            "type": "composer",
-            "url": "https://packages.drupal.org/8"
-        }
-    ],
-    "extra": {
-        "installer-paths": {
-            "web/core": [
-                "type:drupal-core"
-            ],
-            "web/libraries/{$name}": [
-                "type:drupal-library"
-            ],
-            "web/modules/{$name}": [
-                "type:drupal-module"
-            ],
-            "web/profiles/{$name}": [
-                "type:drupal-profile"
-            ],
-            "web/themes/{$name}": [
-                "type:drupal-theme"
-            ],
-            "drush/{$name}": [
-                "type:drupal-drush"
-            ]
-        },
-        "drupal-scaffold": {
-            "locations": {
-                "web-root": "web/"
-            }
-        },
-        "drush": {
-            "services": {
-                "drush.services.yml": "^10"
-            }
-        }
-    },
-    "scripts": {
-        "post-install-cmd": "@post-update-cmd",
-        "post-update-cmd": [
-            "@populate-web-modules-project"
-        ],
-        "populate-web-modules-project": [
-            "rm -rf web/modules/project && mkdir -p web/modules/project",
-            "cp -r src/ js/ templates/ auth0.* composer.* web/modules/project/"
-        ],
-        "phpqa": [
-            "@populate-web-modules-project",
-            "docker run --rm -it -v `pwd`:/app/drupal -v $PWD/reports:/app/reports ghcr.io/sparkfabrik/drupal-qa:latest vendor/bin/phpqa --analyzedDirs /app/drupal/web/modules/project --tools=phpmetrics,phploc,phpcs,php-cs-fixer,phpmd,pdepend,phpcpd,phpstan,phpunit,security-checker:0,parallel-lint:0"
-        ]
-    },
     "authors": [
         {
             "name": "German Lena",
@@ -92,6 +14,23 @@
         {
             "name": "Josh Cunningham",
             "email": "josh.cunningham@auth0.com"
+        },
+        {
+            "name": "Travis Tomka",
+            "email": "underoathosx@gmail.com"
         }
-    ]
+    ],
+    "description": "Single Sign-On for enterprises, social login, and user/password management for all your Drupal instances, powered by Auth0.",
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true
+        }
+    },
+    "require": {
+        "auth0/auth0-php": "^8.3",
+        "php-http/guzzle7-adapter": "^1.0"
+    },
+    "require-dev": {
+        "drush/drush": "^13.6"
+    }
 }

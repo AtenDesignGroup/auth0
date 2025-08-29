@@ -169,7 +169,7 @@ class AuthController extends ControllerBase {
   /**
    * Current Request.
    *
-   * @var \Symfony\Component\HttpFoundation\Request|null
+   * @var \Symfony\Component\HttpFoundation\Request
    */
   protected Request $currentRequest;
 
@@ -207,7 +207,7 @@ class AuthController extends ControllerBase {
     AuthHelper $auth0_helper,
     ClientInterface $http_client,
     Connection $database,
-    RequestStack $request_stack
+    RequestStack $request_stack,
   ) {
     $this->database = $database;
     $this->helper = $auth0_helper;
@@ -332,7 +332,7 @@ class AuthController extends ControllerBase {
    * @todo Allow returnTo and frederated parameters.
    * @see https://auth0.com/docs/api/authentication?http#logout
    */
-  public function logout(string $return = NULL) {
+  public function logout(?string $return = NULL) {
     global $base_url;
     $auth0Api = new Authentication($this->auth0->configuration());
     user_logout();
@@ -435,8 +435,7 @@ class AuthController extends ControllerBase {
    * @return \Drupal\Core\Routing\TrustedRedirectResponse|null|\Symfony\Component\HttpFoundation\RedirectResponse
    *   The redirect response.
    *
-   * @throws \Auth0\SDK\Exception\CoreException
-   *   The Auth0 exception.
+   * @throws \Exception
    */
   public function callback(Request $request) {
     $problem_logging_in_msg = $this->t('There was a problem logging you in, sorry for the inconvenience.');
@@ -955,7 +954,7 @@ class AuthController extends ControllerBase {
    */
   private function getRandomBytes($nbBytes = 32) {
     $bytes = openssl_random_pseudo_bytes($nbBytes, $strong);
-    if (FALSE !== $bytes && TRUE === $strong) {
+    if ($bytes && TRUE === $strong) {
       return $bytes;
     }
     else {
