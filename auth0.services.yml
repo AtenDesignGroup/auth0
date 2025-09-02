@@ -1,4 +1,15 @@
 services:
+  logger.channel.auth0:
+    parent: logger.channel_base
+    arguments: ['auth0']
+
+  auth0.configuration:
+    class: Drupal\auth0\Service\ConfigurationService
+    arguments: 
+      - '@config.factory'
+      - '@key.repository'
+      - '@logger.channel.auth0'
+  
   auth0.helper:
     class: Drupal\auth0\Util\AuthHelper
-    arguments: ['@config.factory']
+    arguments: ['@auth0.configuration']

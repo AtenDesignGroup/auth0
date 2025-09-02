@@ -13,13 +13,12 @@ use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\Core\Session\SessionManagerInterface;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\user\UserInterface;
 use Drupal\Core\TempStore\PrivateTempStore;
 use Drupal\Core\PageCache\ResponsePolicyInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
-use Drupal\Core\Config\ImmutableConfig;
+use Drupal\auth0\Contracts\ConfigurationServiceInterface;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -97,11 +96,11 @@ class AuthController extends ControllerBase {
   protected LoggerInterface $auth0Logger;
 
   /**
-   * The config.
+   * The configuration service.
    *
-   * @var \Drupal\Core\Config\ImmutableConfig
+   * @var \Drupal\auth0\Contracts\ConfigurationServiceInterface
    */
-  protected ImmutableConfig $config;
+  protected ConfigurationServiceInterface $configurationService;
 
   /**
    * The Auth0 client id.
@@ -186,8 +185,8 @@ class AuthController extends ControllerBase {
    *   The logger factory.
    * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
    *   The event dispatcher.
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   The config factory.
+   * @param \Drupal\auth0\Contracts\ConfigurationServiceInterface $configuration_service
+   *   The configuration service.
    * @param \Drupal\auth0\Util\AuthHelper $auth0_helper
    *   The Auth0 helper.
    * @param \GuzzleHttp\ClientInterface $http_client
@@ -203,7 +202,7 @@ class AuthController extends ControllerBase {
     ResponsePolicyInterface $page_cache,
     LoggerChannelFactoryInterface $logger_factory,
     EventDispatcherInterface $event_dispatcher,
-    ConfigFactoryInterface $config_factory,
+    ConfigurationServiceInterface $configuration_service,
     AuthHelper $auth0_helper,
     ClientInterface $http_client,
     Connection $database,
@@ -213,6 +212,7 @@ class AuthController extends ControllerBase {
     $this->helper = $auth0_helper;
     $this->httpClient = $http_client;
     $this->eventDispatcher = $event_dispatcher;
+    $this->configurationService = $configuration_service;
 
     global $base_url;
 
@@ -224,12 +224,11 @@ class AuthController extends ControllerBase {
     $this->sessionManager = $session_manager;
     $this->logger = $logger_factory->get(AuthController::AUTH0_LOGGER);
     $this->auth0Logger = $logger_factory->get('auth0');
-    $this->config = $config_factory->get('auth0.settings');
-    $this->clientId = $this->config->get(AuthController::AUTH0_CLIENT_ID);
-    $this->clientSecret = $this->config->get(AuthController::AUTH0_CLIENT_SECRET);
-    $this->cookieSecret = $this->config->get(AuthController::AUTH0_COOKIE_SECRET);
-    $this->redirectForSso = (bool) $this->config->get(AuthController::AUTH0_REDIRECT_FOR_SSO);
-    $this->offlineAccess = (bool) $this->config->get(AuthController::AUTH0_OFFLINE_ACCESS);
+    $this->clientId = $this->configurationService->getClientId();
+    $this->clientSecret = $this->configurationService->getClientSecret();
+    $this->cookieSecret = $this->configurationService->getCookieSecret();
+    $this->redirectForSso = $this->configurationService->isRedirectForSso();
+    $this->offlineAccess = $this->configurationService->isOfflineAccess();
     $this->currentRequest = $request_stack->getCurrentRequest();
 
     $scopes = explode(' ', AUTH0_DEFAULT_SCOPES);
@@ -258,7 +257,7 @@ class AuthController extends ControllerBase {
       $container->get('page_cache_kill_switch'),
       $container->get('logger.factory'),
       $container->get('event_dispatcher'),
-      $container->get('config.factory'),
+      $container->get('auth0.configuration'),
       $container->get('auth0.helper'),
       $container->get('http_client'),
       $container->get('database'),
@@ -278,9 +277,9 @@ class AuthController extends ControllerBase {
   public function login(Request $request) {
     global $base_url;
 
-    $lockExtraSettings = $this->config->get('auth0_lock_extra_settings');
+    $lockExtraSettings = $this->configurationService->getLockExtraSettings();
 
-    if (trim($lockExtraSettings) == "") {
+    if (empty(trim($lockExtraSettings))) {
       $lockExtraSettings = "{}";
     }
 
@@ -295,24 +294,24 @@ class AuthController extends ControllerBase {
     // Not doing SSO, so show login page.
     return [
       '#theme' => 'auth0_login',
-      '#loginCSS' => $this->config->get('auth0_login_css'),
+      '#loginCSS' => $this->configurationService->getLoginCss(),
       '#attached' => [
         'library' => [
           'auth0/auth0.lock',
         ],
         'drupalSettings' => [
           'auth0' => [
-            'clientId' => $this->config->get('auth0_client_id'),
+            'clientId' => $this->configurationService->getClientId(),
             'domain' => $this->helper->getAuthDomain(),
             'lockExtraSettings' => $lockExtraSettings,
-            'configurationBaseUrl' => $this->helper->getTenantCdn($this->config->get('auth0_domain')),
-            'showSignup' => $this->config->get('auth0_allow_signup'),
+            'configurationBaseUrl' => $this->helper->getTenantCdn($this->configurationService->getDomain()),
+            'showSignup' => $this->configurationService->isAllowSignup(),
             'callbackURL' => "$base_url/auth0/callback",
             'state' => $this->getState($returnTo),
             'nonce' => $this->getNonce(),
             'scopes' => AUTH0_DEFAULT_SCOPES,
             'offlineAccess' => $this->offlineAccess,
-            'formTitle' => $this->config->get('auth0_form_title'),
+            'formTitle' => $this->configurationService->getFormTitle(),
             'jsonErrorMsg' => $this->t('There was an error parsing the "Lock extra settings" field.'),
           ],
         ],
@@ -519,7 +518,7 @@ class AuthController extends ControllerBase {
    *   When an email hasn't been verified.
    */
   protected function validateUserEmail(array $userInfo) {
-    $requires_email = $this->config->get('auth0_requires_verified_email');
+    $requires_email = $this->configurationService->isRequiresVerifiedEmail();
 
     if ($requires_email) {
       if (!isset($userInfo['email']) || empty($userInfo['email'])) {
@@ -652,14 +651,14 @@ class AuthController extends ControllerBase {
 
     $joinUser = FALSE;
 
-    $user_name_claim = $this->config->get('auth0_username_claim') ?: AUTH0_DEFAULT_USERNAME_CLAIM;
+    $user_name_claim = $this->configurationService->getUsernameClaim();
 
     // Drupal usernames do not allow pipe characters.
     $user_name_used = !empty($userInfo[$user_name_claim])
       ? $userInfo[$user_name_claim]
       : str_replace('|', '_', $userInfo['user_id']);
 
-    if ($this->config->get('auth0_join_user_by_mail_enabled') && !empty($userInfo['email'])) {
+    if ($this->configurationService->isJoinUserByMailEnabled() && !empty($userInfo['email'])) {
       $this->auth0Logger->notice($userInfo['email'] . ' join user by mail is enabled, looking up user by email');
       // If the user has a verified email or is a database user try to see if
       // there is a user to join with. The isDatabase is because we don't want
@@ -772,7 +771,7 @@ class AuthController extends ControllerBase {
    *   The edit array.
    */
   protected function auth0UpdateFields(array $userInfo, UserInterface $user, array &$edit) {
-    $auth0_claim_mapping = $this->config->get('auth0_claim_mapping');
+    $auth0_claim_mapping = $this->configurationService->getClaimMapping();
 
     if (isset($auth0_claim_mapping) && !empty($auth0_claim_mapping)) {
       // For each claim mapping, lookup the value, otherwise set to blank.
@@ -824,7 +823,7 @@ class AuthController extends ControllerBase {
    */
   protected function auth0UpdateRoles(array $userInfo, UserInterface $user, array &$edit) {
     $this->auth0Logger->notice("Mapping Roles");
-    $auth0_claim_to_use_for_role = $this->config->get('auth0_claim_to_use_for_role');
+    $auth0_claim_to_use_for_role = $this->configurationService->getClaimToUseForRole();
 
     if (isset($auth0_claim_to_use_for_role) && !empty($auth0_claim_to_use_for_role)) {
       $claim_value = $userInfo[$auth0_claim_to_use_for_role] ?? '';
@@ -838,7 +837,7 @@ class AuthController extends ControllerBase {
         $claim_values[] = $claim_value;
       }
 
-      $auth0_role_mapping = $this->config->get('auth0_role_mapping');
+      $auth0_role_mapping = $this->configurationService->getRoleMapping();
       $mappings = $this->auth0PipeListToArray($auth0_role_mapping);
 
       $roles_granted = [];
@@ -989,10 +988,7 @@ class AuthController extends ControllerBase {
    * @throws \Exception
    */
   protected function createDrupalUser(array $userInfo) {
-    $user_name_claim = $this->config->get('auth0_username_claim');
-    if ($user_name_claim == '') {
-      $user_name_claim = 'nickname';
-    }
+    $user_name_claim = $this->configurationService->getUsernameClaim();
 
     /** @var \Drupal\user\UserInterface $user */
     $user = $this->entityTypeManager()->getStorage('user')->create();

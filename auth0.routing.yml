@@ -44,6 +44,6 @@ auth0.advanced_settings:
   path: '/admin/config/auth0/advanced'
   defaults:
     _form: '\Drupal\auth0\Form\BasicAdvancedForm'
-    _title: 'Configure your auth0 account and widget.'
+    _title: 'Auth0 Advanced Settings'
   requirements:
     _permission: 'administer site configuration'

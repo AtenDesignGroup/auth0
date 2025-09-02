@@ -9,7 +9,7 @@ namespace Drupal\auth0\Util;
 
 use Auth0\SDK\Utility\HttpTelemetry;
 
-use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\auth0\Contracts\ConfigurationServiceInterface;
 
 /**
  * Controller routines for auth0 authentication.
@@ -19,11 +19,11 @@ class AuthHelper {
   const AUTH0_CUSTOM_DOMAIN = 'auth0_custom_domain';
 
   /**
-   * The module configuration.
+   * The configuration service.
    *
-   * @var \Drupal\Core\Config\ImmutableConfig
+   * @var \Drupal\auth0\Contracts\ConfigurationServiceInterface
    */
-  private $config;
+  protected ConfigurationServiceInterface $configurationService;
 
   /**
    * Auth0 domain.
@@ -42,13 +42,13 @@ class AuthHelper {
   /**
    * Initialize the Helper.
    *
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   The config factory.
+   * @param \Drupal\auth0\Contracts\ConfigurationServiceInterface $configuration_service
+   *   The configuration service.
    */
-  public function __construct(ConfigFactoryInterface $config_factory) {
-    $this->config = $config_factory->get('auth0.settings');
-    $this->domain = $this->config->get(AuthHelper::AUTH0_DOMAIN);
-    $this->customDomain = $this->config->get(AuthHelper::AUTH0_CUSTOM_DOMAIN);
+  public function __construct(ConfigurationServiceInterface $configuration_service) {
+    $this->configurationService = $configuration_service;
+    $this->domain = $this->configurationService->getDomain();
+    $this->customDomain = $this->configurationService->getCustomDomain();
 
     self::setTelemetry();
   }

@@ -23,14 +23,65 @@
     "description": "Single Sign-On for enterprises, social login, and user/password management for all your Drupal instances, powered by Auth0.",
     "config": {
         "allow-plugins": {
-            "php-http/discovery": true
+            "php-http/discovery": true,
+            "composer/installers": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "tbachert/spi": true,
+            "phpstan/extension-installer": true,
+            "cweagans/composer-patches": true,
+            "drupal/core-composer-scaffold": true
         }
     },
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://packages.drupal.org/8"
+        }
+    ],
     "require": {
         "auth0/auth0-php": "^8.3",
+        "drupal/key": "^1.20",
         "php-http/guzzle7-adapter": "^1.0"
     },
     "require-dev": {
+        "composer/installers": "^1 || ^2",
+        "drupal/core-composer-scaffold": "^11",
+        "cweagans/composer-patches": "~1.0",
+        "drupal/core-recommended": "^11",
+        "drupal/core-dev": "^11",
+        "php-parallel-lint/php-parallel-lint": "^1.2",
         "drush/drush": "^13.6"
+    },
+    "extra": {
+        "installer-paths": {
+            "web/core": [
+                "type:drupal-core"
+            ],
+            "web/libraries/{$name}": [
+                "type:drupal-library"
+            ],
+            "web/modules/contrib/{$name}": [
+                "type:drupal-module"
+            ],
+            "web/profiles/contrib/{$name}": [
+                "type:drupal-profile"
+            ],
+            "web/themes/contrib/{$name}": [
+                "type:drupal-theme"
+            ],
+            "drush/{$name}": [
+                "type:drupal-drush"
+            ]
+        },
+        "drupal-scaffold": {
+            "locations": {
+                "web-root": "web/"
+            }
+        },
+        "drush": {
+            "services": {
+                "drush.services.yml": "^9 || ^10 || ^11"
+            }
+        }
     }
 }
