@@ -1,15 +1,38 @@
 services:
-  logger.channel.auth0:
-    parent: logger.channel_base
-    arguments: ['auth0']
+  auth0.client:
+    class: Drupal\auth0\Service\ClientService
+    arguments:
+      - '@request_stack'
+      - '@tempstore.private'
+      - '@auth0.configuration'
+      - '@logger.channel.auth0'
 
   auth0.configuration:
     class: Drupal\auth0\Service\ConfigurationService
-    arguments: 
+    arguments:
+      - '@request_stack'
       - '@config.factory'
       - '@key.repository'
       - '@logger.channel.auth0'
-  
+      -
+  auth0.authentication:
+    class: Drupal\auth0\Service\AuthenticationService
+    arguments:
+      - '@auth0.client'
+      - '@auth0.user.provision'
+      - '@auth0.configuration'
+
+  auth0.user.provision:
+    class: Drupal\auth0\Service\UserProvisionService
+    arguments:
+      - '@externalauth.authmap'
+      - '@externalauth.externalauth'
+      - '@auth0.configuration'
+
+  logger.channel.auth0:
+    parent: logger.channel_base
+    arguments: [ 'auth0' ]
+
   auth0.helper:
     class: Drupal\auth0\Util\AuthHelper
-    arguments: ['@auth0.configuration']
+    arguments: [ '@auth0.configuration' ]

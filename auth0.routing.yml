@@ -6,6 +6,7 @@ auth0.login:
   requirements:
     _access: 'TRUE'
   options:
+    no_cache: TRUE
     _maintenance_access: TRUE
 
 auth0.legacy_login:
@@ -16,6 +17,7 @@ auth0.legacy_login:
   requirements:
     _access: 'TRUE'
   options:
+    no_cache: TRUE
     _maintenance_access: TRUE
 
 auth0.callback:
@@ -24,6 +26,8 @@ auth0.callback:
     _controller: '\Drupal\auth0\Controller\AuthController::callback'
   requirements:
     _access: 'TRUE'
+  options:
+    no_cache: TRUE
 
 auth0.logout:
   path: '/user/logout'
@@ -31,6 +35,8 @@ auth0.logout:
     _controller: '\Drupal\auth0\Controller\AuthController::logout'
   requirements:
     _access: 'TRUE'
+  options:
+    no_cache: TRUE
 
 auth0.settings:
   path: '/admin/config/auth0'

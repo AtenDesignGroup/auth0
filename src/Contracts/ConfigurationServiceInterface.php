@@ -10,7 +10,21 @@ namespace Drupal\auth0\Contracts;
 interface ConfigurationServiceInterface {
 
   /**
-   * Gets the Auth0 domain.
+   * Get the Auth0 redirect URI.
+   *
+   * @return string
+   */
+  public function redirectUri(): string;
+
+  /**
+   * Resolve the Auth0 custom or default domain.
+   *
+   * @return string
+   */
+  public function resolveDomain(): string;
+
+  /**
+   * Gets the Auth0 default domain.
    *
    * @return string
    *   The Auth0 domain (e.g., 'example.auth0.com').
@@ -24,6 +38,13 @@ interface ConfigurationServiceInterface {
    *   The Auth0 custom domain or NULL if not configured.
    */
   public function getCustomDomain(): ?string;
+
+  /**
+   * Gets the Auth0 domain tenant CDN.
+   *
+   * @return string
+   */
+  public function getDomainTenantCdn(): string;
 
   /**
    * Gets the Auth0 client ID.

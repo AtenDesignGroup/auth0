@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Drupal\auth0\Service;
 
-use Drupal\auth0\Contracts\ConfigurationServiceInterface;
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\key\KeyRepositoryInterface;
 use Psr\Log\LoggerInterface;
+use Drupal\key\KeyRepositoryInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Drupal\auth0\Contracts\ConfigurationServiceInterface;
 
 /**
  * Auth0 configuration service.
@@ -58,33 +60,24 @@ class ConfigurationService implements ConfigurationServiceInterface {
   /**
    * Default JWT signing algorithm.
    */
-  private const string DEFAULT_JWT_ALGORITHM = 'RS256';
+  protected const string DEFAULT_JWT_ALGORITHM = 'RS256';
 
   /**
    * Default username claim.
    */
-  private const string DEFAULT_USERNAME_CLAIM = 'nickname';
+  protected const string DEFAULT_USERNAME_CLAIM = 'nickname';
 
   /**
-   * The config factory service.
-   *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   * Default authentication scopes.
    */
-  protected ConfigFactoryInterface $configFactory;
+  protected const string AUTH0_DEFAULT_SCOPES = 'openid email profile';
 
   /**
-   * The key repository service.
+   * The Drupal request.
    *
-   * @var \Drupal\key\KeyRepositoryInterface
+   * @var \Symfony\Component\HttpFoundation\Request|null
    */
-  protected KeyRepositoryInterface $keyRepository;
-
-  /**
-   * The logger service.
-   *
-   * @var \Psr\Log\LoggerInterface
-   */
-  protected LoggerInterface $logger;
+  protected ?Request $request;
 
   /**
    * Cached configuration data.
@@ -96,21 +89,26 @@ class ConfigurationService implements ConfigurationServiceInterface {
   /**
    * Constructs a new ConfigurationService.
    *
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   The config factory service.
-   * @param \Drupal\key\KeyRepositoryInterface $key_repository
-   *   The key repository service.
+   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
+   * @param \Drupal\key\KeyRepositoryInterface $keyRepository
    * @param \Psr\Log\LoggerInterface $logger
    *   The logger service.
    */
   public function __construct(
-    ConfigFactoryInterface $config_factory,
-    KeyRepositoryInterface $key_repository,
-    LoggerInterface $logger,
+    RequestStack $request_stack,
+    protected ConfigFactoryInterface $configFactory,
+    protected KeyRepositoryInterface $keyRepository,
+    protected LoggerInterface $logger,
   ) {
-    $this->configFactory = $config_factory;
-    $this->keyRepository = $key_repository;
-    $this->logger = $logger;
+    $this->request = $request_stack->getCurrentRequest();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function resolveDomain(): string {
+    return $this->getCustomDomain() ?: $this->getDomain();
   }
 
   /**
@@ -130,6 +128,22 @@ class ConfigurationService implements ConfigurationServiceInterface {
   /**
    * {@inheritdoc}
    */
+  public function getDomainTenantCdn(): string {
+    $domain = $this->getDomain();
+
+    if (preg_match('/\.([^.]+)\.auth0\.com$/', $domain, $matches)) {
+      $region = $matches[1];
+      return $region === 'us'
+        ? 'https://cdn.auth0.com'
+        : "https://cdn.$region.auth0.com";
+    }
+
+    return 'https://cdn.auth0.com';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getClientId(): string {
     return $this->get('auth0_client_id', '');
   }
@@ -138,16 +152,18 @@ class ConfigurationService implements ConfigurationServiceInterface {
    * {@inheritdoc}
    */
   public function getClientSecret(): string {
-    // Check for Key module integration first.
     $key_id = $this->get('auth0_client_secret_key');
+
     if ($key_id && $key = $this->keyRepository->getKey($key_id)) {
       return $key->getKeyValue();
     }
 
-    // Fallback to direct config for backward compatibility.
     $direct_value = $this->get('auth0_client_secret', '');
+
     if ($direct_value) {
-      $this->logger->warning('Using client_secret from configuration. Consider using Key module for better security.');
+      $this->logger->warning(
+        'Using client_secret from configuration. Consider using Key module for better security.'
+      );
     }
 
     return $direct_value;
@@ -157,16 +173,17 @@ class ConfigurationService implements ConfigurationServiceInterface {
    * {@inheritdoc}
    */
   public function getCookieSecret(): string {
-    // Check for Key module integration first.
     $key_id = $this->get('auth0_cookie_secret_key');
+
     if ($key_id && $key = $this->keyRepository->getKey($key_id)) {
       return $key->getKeyValue();
     }
-
-    // Fallback to direct config for backward compatibility.
     $direct_value = $this->get('auth0_cookie_secret', '');
+
     if ($direct_value) {
-      $this->logger->warning('Using cookie_secret from configuration. Consider using Key module for better security.');
+      $this->logger->warning(
+        'Using cookie_secret from configuration. Consider using Key module for better security.'
+      );
     }
 
     return $direct_value;
@@ -190,9 +207,14 @@ class ConfigurationService implements ConfigurationServiceInterface {
    * {@inheritdoc}
    */
   public function getDefaultScopes(): array {
-    // Get scopes from constant or configuration.
-    $scopes = defined('AUTH0_DEFAULT_SCOPES') ? AUTH0_DEFAULT_SCOPES : 'openid email profile';
-    return explode(' ', trim($scopes));
+    return explode(' ', trim(static::AUTH0_DEFAULT_SCOPES));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function redirectUri(): string {
+    return "{$this->request->getSchemeAndHttpHost()}/auth0/callback";
   }
 
   /**
@@ -227,7 +249,7 @@ class ConfigurationService implements ConfigurationServiceInterface {
    * {@inheritdoc}
    */
   public function getJwtSigningAlgorithm(): string {
-    return $this->get('auth0_jwt_signature_alg', self::DEFAULT_JWT_ALGORITHM);
+    return $this->get('auth0_jwt_signature_alg', static::DEFAULT_JWT_ALGORITHM);
   }
 
   /**
@@ -262,7 +284,7 @@ class ConfigurationService implements ConfigurationServiceInterface {
    * {@inheritdoc}
    */
   public function getUsernameClaim(): string {
-    return $this->get('auth0_username_claim', self::DEFAULT_USERNAME_CLAIM);
+    return $this->get('auth0_username_claim', static::DEFAULT_USERNAME_CLAIM);
   }
 
   /**
@@ -276,7 +298,7 @@ class ConfigurationService implements ConfigurationServiceInterface {
    * {@inheritdoc}
    */
   public function getLockExtraSettings(): ?string {
-    return $this->get('auth0_lock_extra_settings') ?: NULL;
+    return $this->get('auth0_lock_extra_settings', '{}') ?: NULL;
   }
 
   /**
@@ -318,7 +340,8 @@ class ConfigurationService implements ConfigurationServiceInterface {
    * {@inheritdoc}
    */
   public function get(string $key, mixed $default = NULL): mixed {
-    $config = $this->loadConfiguration();
+    $config = $this->getAll();
+
     return $config[$key] ?? $default;
   }
 
@@ -332,9 +355,14 @@ class ConfigurationService implements ConfigurationServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function set(string $key, mixed $value): self {
+  public function setMultiple(array $values): self {
     $config = $this->configFactory->getEditable(self::CONFIG_NAME);
-    $config->set($key, $value)->save();
+
+    foreach ($values as $key => $value) {
+      $config->set($key, $value);
+    }
+
+    $config->save();
 
     // Clear cache since config has changed.
     $this->configCache = NULL;
@@ -345,14 +373,9 @@ class ConfigurationService implements ConfigurationServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function setMultiple(array $values): self {
+  public function set(string $key, mixed $value): self {
     $config = $this->configFactory->getEditable(self::CONFIG_NAME);
-
-    foreach ($values as $key => $value) {
-      $config->set($key, $value);
-    }
-
-    $config->save();
+    $config->set($key, $value)->save();
 
     // Clear cache since config has changed.
     $this->configCache = NULL;
