@@ -475,6 +475,111 @@ class ConfigurationServiceTest extends UnitTestCase {
   }
 
   /**
+   * Tests getProfileFieldMappingRules method with valid pipe-delimited mapping.
+   */
+  public function testGetProfileFieldMappingRulesWithValidMapping(): void {
+    $this->config->method('get')
+      ->willReturnCallback(function() {
+        return [
+          'auth0_claim_mapping' => "given_name|field_first_name\nfamily_name|field_last_name\nemail|field_email_address",
+        ];
+      });
+
+    $expected = [
+      'given_name' => 'field_first_name',
+      'family_name' => 'field_last_name',
+      'email' => 'field_email_address',
+    ];
+
+    $this->assertEquals($expected, $this->service->getProfileFieldMappingRules());
+  }
+
+  /**
+   * Tests getProfileFieldMappingRules method with single field mapping.
+   */
+  public function testGetProfileFieldMappingRulesWithSingleMapping(): void {
+    $this->config->method('get')
+      ->willReturnCallback(function() {
+        return [
+          'auth0_claim_mapping' => 'email|field_email',
+        ];
+      });
+
+    $expected = [
+      'email' => 'field_email',
+    ];
+
+    $this->assertEquals($expected, $this->service->getProfileFieldMappingRules());
+  }
+
+  /**
+   * Tests getProfileFieldMappingRules method with empty mapping.
+   */
+  public function testGetProfileFieldMappingRulesWithEmptyMapping(): void {
+    $this->config->method('get')
+      ->willReturnCallback(function() {
+        return [
+          'auth0_profile_field_mapping' => '',
+        ];
+      });
+
+    $this->assertEquals([], $this->service->getProfileFieldMappingRules());
+  }
+
+  /**
+   * Tests getProfileFieldMappingRules method with null mapping.
+   */
+  public function testGetProfileFieldMappingRulesWithNullMapping(): void {
+    $this->config->method('get')
+      ->willReturnCallback(function() {
+        return [
+          'auth0_profile_field_mapping' => NULL,
+        ];
+      });
+
+    $this->assertEquals([], $this->service->getProfileFieldMappingRules());
+  }
+
+  /**
+   * Tests getProfileFieldMappingRules method with malformed mapping lines.
+   */
+  public function testGetProfileFieldMappingRulesWithMalformedMapping(): void {
+    $this->config->method('get')
+      ->willReturnCallback(function() {
+        return [
+          'auth0_claim_mapping' => "given_name|field_first_name\ninvalid_line_no_pipe\nfamily_name|field_last_name\n|empty_auth0_claim\nempty_drupal_field|\n  |  \nemail|field_email",
+        ];
+      });
+
+    $expected = [
+      'given_name' => 'field_first_name',
+      'family_name' => 'field_last_name',
+      'email' => 'field_email',
+    ];
+
+    $this->assertEquals($expected, $this->service->getProfileFieldMappingRules());
+  }
+
+  /**
+   * Tests getProfileFieldMappingRules method with whitespace handling.
+   */
+  public function testGetProfileFieldMappingRulesWithWhitespace(): void {
+    $this->config->method('get')
+      ->willReturnCallback(function() {
+        return [
+          'auth0_claim_mapping' => "  given_name  |  field_first_name  \n\n  email  |  field_email  \n\n",
+        ];
+      });
+
+    $expected = [
+      'given_name' => 'field_first_name',
+      'email' => 'field_email',
+    ];
+
+    $this->assertEquals($expected, $this->service->getProfileFieldMappingRules());
+  }
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {

@@ -414,6 +414,33 @@ class ConfigurationService implements ConfigurationServiceInterface {
   /**
    * {@inheritdoc}
    */
+  public function getProfileFieldMappingRules(): array {
+    $rules = [];
+    $mapping = $this->get('auth0_claim_mapping');
+
+    if (is_string($mapping) && !empty($mapping)) {
+      $lines = array_filter(explode("\n", trim($mapping)));
+
+      foreach ($lines as $line) {
+        $parts = explode('|', str_replace(' ', '', $line), 2);
+
+        if (count($parts) === 2) {
+          $auth0Claim = trim($parts[0]);
+          $drupalField = trim($parts[1]);
+
+          if (!empty($auth0Claim) && !empty($drupalField)) {
+            $rules[$auth0Claim] = $drupalField;
+          }
+        }
+      }
+    }
+
+    return $rules;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getDefaultRole(): string {
     return $this->get('default_role', 'authenticated');
   }

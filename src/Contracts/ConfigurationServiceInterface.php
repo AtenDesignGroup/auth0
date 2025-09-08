@@ -292,6 +292,19 @@ interface ConfigurationServiceInterface {
   public function getRoleMappingRules(): array;
 
   /**
+   * Gets the profile field mapping rules from configuration.
+   *
+   * Parses the 'auth0_profile_field_mapping' configuration value which should
+   * contain pipe-delimited mappings in the format:
+   * "auth0_claim|drupal_field_name" (one per line).
+   *
+   * @return array<string, array<string>>
+   *   An associative array where keys are Auth0 claim names
+   *   and values are arrays of Drupal field machine names.
+   */
+  public function getProfileFieldMappingRules(): array;
+
+  /**
    * Gets the default role to assign when no mapping rules match.
    *
    * @return string

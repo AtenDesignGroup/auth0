@@ -70,8 +70,38 @@ class UserProvisionService implements UserProvisionServiceInterface {
         'name' => $name,
         'email' => $user->email(),
         'roles' => $this->mapAuth0Roles($user),
+        ...$this->mapAuth0ProfileFields($user),
       ]
     );
+  }
+
+  /**
+   * Map Auth0 user claims to Drupal profile fields.
+   *
+   * @param \Drupal\auth0\ValueObject\Auth0User $auth0User
+   *   The Auth0 user object.
+   *
+   * @return array
+   *   Associative array of Drupal field names mapped to claim values.
+   */
+  public function mapAuth0ProfileFields(Auth0User $auth0User): array {
+    $mappedFields = [];
+    $mappingRules = $this->configurationService->getProfileFieldMappingRules();
+
+    if (empty($mappingRules)) {
+      return [];
+    }
+
+    foreach ($mappingRules as $auth0Claim => $drupalField) {
+      $claimValue = $auth0User->get($auth0Claim);
+
+      if (empty($claimValue)) {
+        continue;
+      }
+      $mappedFields[$drupalField] = $claimValue;
+    }
+
+    return $mappedFields;
   }
 
   /**
