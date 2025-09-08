@@ -297,8 +297,8 @@ class ConfigurationService implements ConfigurationServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function getLockExtraSettings(): ?string {
-    return $this->get('auth0_lock_extra_settings', '{}') ?: NULL;
+  public function getLockExtraSettings(): string {
+    return $this->get('auth0_lock_extra_settings', '{}');
   }
 
   /**
@@ -381,6 +381,41 @@ class ConfigurationService implements ConfigurationServiceInterface {
     $this->configCache = NULL;
 
     return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRoleMappingRules(): array {
+    $mapping = $this->get('auth0_role_mapping', '');
+
+    // Parse pipe-delimited string format
+    if (is_string($mapping) && !empty($mapping)) {
+      $parsedRules = [];
+      $lines = array_filter(explode("\n", trim($mapping)));
+
+      foreach ($lines as $line) {
+        $parts = explode('|', trim($line), 2);
+        if (count($parts) === 2) {
+          $auth0Role = trim($parts[0]);
+          $drupalRole = trim($parts[1]);
+          if (!empty($auth0Role) && !empty($drupalRole)) {
+            $parsedRules[$auth0Role] = [$drupalRole];
+          }
+        }
+      }
+
+      return $parsedRules;
+    }
+
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefaultRole(): string {
+    return $this->get('default_role', 'authenticated');
   }
 
   /**

@@ -135,7 +135,46 @@ class ClientService implements ClientServiceInterface {
     $userInfo = $this->client->getUser();
     $userInfo['sub'] = $userInfo['sub'] ?? $userInfo['user_id'] ?? NULL;
     $userInfo['user_id'] = $userInfo['user_id'] ?? $userInfo['sub'] ?? NULL;
+    $userInfo['roles'] = $this->getUserRoles($userInfo['user_id']);
     return $userInfo;
+  }
+
+  /**
+   * @param string $userId
+   *
+   * @return array
+   */
+  protected function getUserRoles(string $userId): array {
+    try {
+      $management = $this->client->management();
+
+      $response = $management->users()->getRoles($userId);
+
+      $rolesData = json_decode(
+        $response->getBody()->getContents(),
+        TRUE,
+        512,
+        JSON_THROW_ON_ERROR
+      ) ?? [];
+
+      $roles = [];
+
+      foreach ($rolesData as $role) {
+        if (!isset($role['name'])) {
+          continue;
+        }
+        $roles[] = $this->toSnakeCase($role['name']);
+      }
+
+      return $roles;
+    }
+    catch (\Exception $exception) {
+      $this->logger->error(
+        'Failed to fetch user roles from Auth0: @message',
+        ['@message' => $exception->getMessage()]
+      );
+      return [];
+    }
   }
 
   /**
@@ -162,6 +201,19 @@ class ClientService implements ClientServiceInterface {
    */
   protected function transientStorage(): StoreInterface {
     return new SessionStore($this->configuration());
+  }
+
+  /**
+   * Converts a given string to snake_case format.
+   *
+   * @param string $string
+   *   The input string to be converted.
+   *
+   * @return string
+   *   The converted string in snake_case format.
+   */
+  protected function toSnakeCase(string $string): string {
+    return strtolower(str_replace(' ', '_', $string));
   }
 
 }

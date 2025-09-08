@@ -28,11 +28,10 @@ services:
       - '@externalauth.authmap'
       - '@externalauth.externalauth'
       - '@auth0.configuration'
+      - '@logger.channel.auth0'
+      - '@entity_type.manager'
+
 
   logger.channel.auth0:
     parent: logger.channel_base
     arguments: [ 'auth0' ]
-
-  auth0.helper:
-    class: Drupal\auth0\Util\AuthHelper
-    arguments: [ '@auth0.configuration' ]

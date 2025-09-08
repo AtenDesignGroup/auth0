@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\auth0\Unit\Service;
 
-use PHPUnit\Framework\Attributes\Group;
-use Drupal\auth0\Service\ConfigurationService;
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Config\ImmutableConfig;
 use Drupal\key\KeyInterface;
-use Drupal\key\KeyRepositoryInterface;
-use Drupal\Tests\UnitTestCase;
 use Psr\Log\LoggerInterface;
+use Drupal\Tests\UnitTestCase;
+use Drupal\key\KeyRepositoryInterface;
+use PHPUnit\Framework\Attributes\Group;
+use Drupal\Core\Config\ImmutableConfig;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\auth0\Service\ConfigurationService;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * @coversDefaultClass \Drupal\auth0\Service\ConfigurationService
@@ -19,33 +20,17 @@ use Psr\Log\LoggerInterface;
 #[Group('auth0')]
 class ConfigurationServiceTest extends UnitTestCase {
 
+  private RequestStack $requestStack;
+
   private ConfigFactoryInterface $configFactory;
+
   private KeyRepositoryInterface $keyRepository;
+
   private LoggerInterface $logger;
+
   private ImmutableConfig $config;
+
   private ConfigurationService $service;
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function setUp(): void {
-    parent::setUp();
-
-    $this->configFactory = $this->createMock(ConfigFactoryInterface::class);
-    $this->keyRepository = $this->createMock(KeyRepositoryInterface::class);
-    $this->logger = $this->createMock(LoggerInterface::class);
-    $this->config = $this->createMock(ImmutableConfig::class);
-
-    $this->configFactory->method('get')
-      ->with('auth0.settings')
-      ->willReturn($this->config);
-
-    $this->service = new ConfigurationService(
-      $this->configFactory,
-      $this->keyRepository,
-      $this->logger
-    );
-  }
 
   /**
    * Tests getDomain method returns correct domain value.
@@ -410,7 +395,7 @@ class ConfigurationServiceTest extends UnitTestCase {
       return [];
     });
 
-    $expected = ['openid', 'profile', 'email', 'offline_access'];
+    $expected = ['openid', 'email', 'profile'];
     $this->assertEquals($expected, $this->service->getDefaultScopes());
   }
 
@@ -482,11 +467,35 @@ class ConfigurationServiceTest extends UnitTestCase {
     $this->assertNull($this->service->getCustomDomain());
     $this->assertNull($this->service->getLogoutReturnUrl());
     $this->assertNull($this->service->getLoginCss());
-    $this->assertNull($this->service->getLockExtraSettings());
+    $this->assertEquals($this->service->getLockExtraSettings(), '{}');
     $this->assertNull($this->service->getClaimMapping());
     $this->assertNull($this->service->getClaimToUseForRole());
     $this->assertNull($this->service->getRoleMapping());
     $this->assertNull($this->service->getWidgetCdn());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp(): void {
+    parent::setUp();
+
+    $this->requestStack = $this->createMock(RequestStack::class);
+    $this->configFactory = $this->createMock(ConfigFactoryInterface::class);
+    $this->keyRepository = $this->createMock(KeyRepositoryInterface::class);
+    $this->logger = $this->createMock(LoggerInterface::class);
+    $this->config = $this->createMock(ImmutableConfig::class);
+
+    $this->configFactory->method('get')
+      ->with('auth0.settings')
+      ->willReturn($this->config);
+
+    $this->service = new ConfigurationService(
+      $this->requestStack,
+      $this->configFactory,
+      $this->keyRepository,
+      $this->logger
+    );
   }
 
 }

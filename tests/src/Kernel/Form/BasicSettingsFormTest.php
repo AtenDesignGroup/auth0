@@ -15,7 +15,7 @@ use Drupal\KernelTests\KernelTestBase;
 #[Group('auth0')]
 class BasicSettingsFormTest extends KernelTestBase {
 
-  protected static $modules = ['system', 'user', 'key', 'auth0'];
+  protected static $modules = ['system', 'user', 'externalauth', 'key', 'auth0'];
 
   /**
    * {@inheritdoc}

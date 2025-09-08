@@ -7,6 +7,7 @@ namespace Drupal\auth0\Form;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\auth0\Contracts\ConfigurationServiceInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -25,11 +26,14 @@ class BasicAdvancedForm extends ConfigFormBase {
    *   The typed config manager.
    * @param \Drupal\auth0\Contracts\ConfigurationServiceInterface $configurationService
    *   The Auth0 configuration service.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
+   *   The entity type manager.
    */
   public function __construct(
     ConfigFactoryInterface $config_factory,
     TypedConfigManagerInterface $typedConfigManager,
     protected ConfigurationServiceInterface $configurationService,
+    protected EntityTypeManagerInterface $entityTypeManager,
   ) {
     parent::__construct($config_factory, $typedConfigManager);
   }
@@ -41,7 +45,8 @@ class BasicAdvancedForm extends ConfigFormBase {
     return new static(
       $container->get('config.factory'),
       $container->get('config.typed'),
-      $container->get('auth0.configuration')
+      $container->get('auth0.configuration'),
+      $container->get('entity_type.manager')
     );
   }
 
@@ -50,15 +55,6 @@ class BasicAdvancedForm extends ConfigFormBase {
    */
   public function getFormId(): string {
     return 'auth0_basic_advanced_form';
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function getEditableConfigNames(): array {
-    return [
-      'auth0.settings',
-    ];
   }
 
   /**
@@ -98,10 +94,10 @@ class BasicAdvancedForm extends ConfigFormBase {
       '#title' => $this->t('Lock JS CDN URL'),
       '#default_value' => $this->configurationService->getWidgetCdn(),
       '#description' => $this->t('Point this to the latest Lock JS version available in the CDN.') . ' ' .
-      sprintf(
-        '<a href="https://github.com/auth0/lock/releases" target="_blank">%s</a>',
-        $this->t('Available Lock JS versions.')
-      ),
+        sprintf(
+          '<a href="https://github.com/auth0/lock/releases" target="_blank">%s</a>',
+          $this->t('Available Lock JS versions.')
+        ),
     ];
 
     $form['auth0_requires_verified_email'] = [
@@ -202,10 +198,59 @@ class BasicAdvancedForm extends ConfigFormBase {
     FormStateInterface $form_state,
   ): void {
     $lock_extra = $form_state->getValue('auth0_lock_extra_settings');
+
     if (!empty($lock_extra) && !json_validate($lock_extra)) {
       $form_state->setErrorByName('auth0_lock_extra_settings',
         $this->t('Lock extra settings must be a valid JSON format')
       );
+    }
+
+    // Validate role mapping rules format
+    $auth0_role_mapping = $form_state->getValue('auth0_role_mapping');
+    if (!empty($auth0_role_mapping)) {
+      $lines = array_filter(explode("\n", trim($auth0_role_mapping)));
+      foreach ($lines as $line) {
+        $line = trim($line);
+        if (empty($line)) {
+          continue;
+        }
+
+        // Check for valid pipe separator
+        if (!str_contains($line, '|')) {
+          $form_state->setErrorByName('auth0_role_mapping',
+            $this->t('Invalid format. Use "auth0_role|drupal_role".')
+          );
+          continue;
+        }
+
+        $parts = explode('|', $line, 2);
+        if (count($parts) !== 2) {
+          continue;
+        }
+
+        $auth0_role = trim($parts[0]);
+        $drupal_role = trim($parts[1]);
+
+        // Validate both parts are not empty
+        if (empty($auth0_role) || empty($drupal_role)) {
+          $form_state->setErrorByName('auth0_role_mapping',
+            $this->t('Auth0 role and Drupal role cannot be empty.')
+          );
+          continue;
+        }
+
+        // Check if Drupal role exists (except for built-in roles)
+        if (!in_array($drupal_role, ['authenticated', 'anonymous'])) {
+          $role_storage = $this->entityTypeManager->getStorage('user_role');
+          if (!$role_storage->load($drupal_role)) {
+            $form_state->setErrorByName('auth0_role_mapping',
+              $this->t('The Drupal role "@role" does not exist.', [
+                '@role' => $drupal_role,
+              ])
+            );
+          }
+        }
+      }
     }
   }
 
@@ -236,6 +281,15 @@ class BasicAdvancedForm extends ConfigFormBase {
     $this->messenger()->addStatus(
       $this->t('The Auth0 advanced settings have been saved.')
     );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getEditableConfigNames(): array {
+    return [
+      'auth0.settings',
+    ];
   }
 
 }

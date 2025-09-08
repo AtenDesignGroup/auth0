@@ -279,4 +279,24 @@ interface ConfigurationServiceInterface {
    */
   public function setMultiple(array $values): self;
 
+  /**
+   * Gets the role mapping rules configuration.
+   *
+   * Returns an array of mapping rules that define how Auth0 claims and roles
+   * are mapped to Drupal roles.
+   *
+   * @return array
+   *   An associative array where keys are Auth0 role/claim identifiers
+   *   and values are arrays of Drupal role machine names.
+   */
+  public function getRoleMappingRules(): array;
+
+  /**
+   * Gets the default role to assign when no mapping rules match.
+   *
+   * @return string
+   *   The default Drupal role machine name.
+   */
+  public function getDefaultRole(): string;
+
 }
