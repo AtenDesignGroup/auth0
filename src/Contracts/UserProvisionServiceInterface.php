@@ -31,6 +31,9 @@ interface UserProvisionServiceInterface {
    *
    * @return \Drupal\user\UserInterface|null
    *   The Drupal user entity.
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Drupal\externalauth\Exception\ExternalAuthRegisterException
    */
   public function login(Auth0User $user): ?UserInterface;
 

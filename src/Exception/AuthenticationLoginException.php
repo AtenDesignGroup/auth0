@@ -8,6 +8,8 @@ namespace Drupal\auth0\Exception;
 class AuthenticationLoginException extends \Exception {
 
   /**
+   * The authentication login exception constructor.
+   *
    * @param string $message
    * @param string $redirectUrl
    * @param string|null $errorMessage
@@ -15,7 +17,7 @@ class AuthenticationLoginException extends \Exception {
   public function __construct(
     string $message,
     public string $redirectUrl = '/',
-    public ?string $errorMessage = null,
+    public ?string $errorMessage = NULL,
   ) {
     parent::__construct($message);
   }
@@ -33,4 +35,5 @@ class AuthenticationLoginException extends \Exception {
   public function getRedirectUrl(): string {
     return $this->redirectUrl;
   }
+
 }

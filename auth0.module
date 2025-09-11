@@ -5,16 +5,10 @@
  * Module definition.
  */
 
-const AUTH0_DEFAULT_SCOPES = 'openid email profile';
-const AUTH0_DEFAULT_SIGNING_ALGORITHM = 'RS256';
-const AUTH0_DEFAULT_USERNAME_CLAIM = 'nickname';
-const AUTH0_MODULE_VERSION = '8.x-2.4';
-
 /**
  * Implements hook_theme().
  */
-function auth0_theme() {
-  // Replaces a form with the lock widget.
+function auth0_theme(): array {
   return [
     'auth0_login' => [
       'template' => 'auth0-login',
@@ -26,19 +20,9 @@ function auth0_theme() {
 }
 
 /**
- * Implements hook_ENTITY_TYPE_delete().
- */
-function auth0_user_delete($account) {
-  // Handle users deletion, it should delete the Auth0 profile.
-  \Drupal::database()->delete('auth0_user')
-    ->condition('drupal_id', $account->uid->value)
-    ->execute();
-}
-
-/**
  * Implements hook_library_info_build().
  */
-function auth0_library_info_build() {
+function auth0_library_info_build(): array {
   $config = \Drupal::service('config.factory')->get('auth0.settings');
   return [
     'auth0.widget' => [

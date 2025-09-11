@@ -17,19 +17,19 @@ interface ConfigurationServiceInterface {
   public function redirectUri(): string;
 
   /**
-   * Resolve the Auth0 custom or default domain.
-   *
-   * @return string
-   */
-  public function resolveDomain(): string;
-
-  /**
    * Gets the Auth0 default domain.
    *
    * @return string
    *   The Auth0 domain (e.g., 'example.auth0.com').
    */
   public function getDomain(): string;
+
+  /**
+   * Resolve the Auth0 custom or default domain.
+   *
+   * @return string
+   */
+  public function resolveDomain(): string;
 
   /**
    * Gets the Auth0 custom domain.
@@ -93,18 +93,13 @@ interface ConfigurationServiceInterface {
   /**
    * Gets the default Auth0 scopes as an array.
    *
-   * @return array
-   *   Array of scope strings.
-   */
-  public function getDefaultScopes(): array;
-
-  /**
-   * Gets the logout return URL.
+   * @param bool $as_string
+   *    Determine if the scopes should be returned as a string.
    *
-   * @return string|null
-   *   The logout returns URL or NULL if not configured.
+   * @return array|string
+   *   Array of scope strings or a comma-separated string.
    */
-  public function getLogoutReturnUrl(): ?string;
+  public function getDefaultScopes(bool $as_string = FALSE): array|string;
 
   /**
    * Checks if offline access is enabled.
@@ -115,28 +110,12 @@ interface ConfigurationServiceInterface {
   public function isOfflineAccess(): bool;
 
   /**
-   * Checks if the secret is base64 encoded.
-   *
-   * @return bool
-   *   TRUE if the secret is base64 encoded, FALSE otherwise.
-   */
-  public function getSecretBase64Encoded(): bool;
-
-  /**
    * Checks if redirect for SSO is enabled.
    *
    * @return bool
    *   TRUE if redirect for SSO is enabled, FALSE otherwise.
    */
   public function isRedirectForSso(): bool;
-
-  /**
-   * Gets the JWT signing algorithm.
-   *
-   * @return string
-   *   The JWT signing algorithm with default fallback.
-   */
-  public function getJwtSigningAlgorithm(): string;
 
   /**
    * Gets the form title.
@@ -147,28 +126,12 @@ interface ConfigurationServiceInterface {
   public function getFormTitle(): string;
 
   /**
-   * Checks if user signup is allowed.
-   *
-   * @return bool
-   *   TRUE if a user signup is allowed, FALSE otherwise.
-   */
-  public function isAllowSignup(): bool;
-
-  /**
    * Checks if verified email is required.
    *
    * @return bool
    *   TRUE if verified email is required, FALSE otherwise.
    */
   public function isRequiresVerifiedEmail(): bool;
-
-  /**
-   * Checks if joining users by email is enabled.
-   *
-   * @return bool
-   *   TRUE if joining users by email is enabled, FALSE otherwise.
-   */
-  public function isJoinUserByMailEnabled(): bool;
 
   /**
    * Gets the username claim.
@@ -195,36 +158,12 @@ interface ConfigurationServiceInterface {
   public function getLockExtraSettings(): ?string;
 
   /**
-   * Checks if auto register is enabled.
-   *
-   * @return bool
-   *   TRUE if auto register is enabled, FALSE otherwise.
-   */
-  public function isAutoRegister(): bool;
-
-  /**
-   * Gets the claim mapping.
-   *
-   * @return string|null
-   *   The claim mapping or NULL if not configured.
-   */
-  public function getClaimMapping(): ?string;
-
-  /**
    * Gets the claim to use for role mapping.
    *
    * @return string|null
    *   The claim to use for role mapping or NULL if not configured.
    */
   public function getClaimToUseForRole(): ?string;
-
-  /**
-   * Gets the role mapping.
-   *
-   * @return string|null
-   *   The role mapping or NULL if not configured.
-   */
-  public function getRoleMapping(): ?string;
 
   /**
    * Gets the widget CDN URL.
@@ -280,6 +219,22 @@ interface ConfigurationServiceInterface {
   public function setMultiple(array $values): self;
 
   /**
+   * Gets the role mapping.
+   *
+   * @return string|null
+   *   The role mapping or NULL if not configured.
+   */
+  public function getRoleMapping(): ?string;
+
+  /**
+   * Checks if role mapping syncing is enabled.
+   *
+   * @return bool
+   *   Return TRUE if role mapping syncing is enabled, FALSE otherwise.
+   */
+  public function isSyncRoleMapping(): bool;
+
+  /**
    * Gets the role mapping rules configuration.
    *
    * Returns an array of mapping rules that define how Auth0 claims and roles
@@ -290,6 +245,22 @@ interface ConfigurationServiceInterface {
    *   and values are arrays of Drupal role machine names.
    */
   public function getRoleMappingRules(): array;
+
+  /**
+   * Gets the claim mapping.
+   *
+   * @return string|null
+   *   The claim mapping or NULL if not configured.
+   */
+  public function getClaimMapping(): ?string;
+
+  /**
+   * Checks if claim mapping syncing is enabled.
+   *
+   * @return bool
+   *   Return TRUE if claim mapping syncing is enabled, FALSE otherwise.
+   */
+  public function isSyncClaimMapping(): bool;
 
   /**
    * Gets the profile field mapping rules from configuration.
@@ -303,13 +274,5 @@ interface ConfigurationServiceInterface {
    *   and values are arrays of Drupal field machine names.
    */
   public function getProfileFieldMappingRules(): array;
-
-  /**
-   * Gets the default role to assign when no mapping rules match.
-   *
-   * @return string
-   *   The default Drupal role machine name.
-   */
-  public function getDefaultRole(): string;
 
 }

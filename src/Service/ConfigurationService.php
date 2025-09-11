@@ -58,11 +58,6 @@ class ConfigurationService implements ConfigurationServiceInterface {
   public const string CONFIG_NAME = 'auth0.settings';
 
   /**
-   * Default JWT signing algorithm.
-   */
-  protected const string DEFAULT_JWT_ALGORITHM = 'RS256';
-
-  /**
    * Default username claim.
    */
   protected const string DEFAULT_USERNAME_CLAIM = 'nickname';
@@ -206,8 +201,16 @@ class ConfigurationService implements ConfigurationServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function getDefaultScopes(): array {
-    return explode(' ', trim(static::AUTH0_DEFAULT_SCOPES));
+  public function getDefaultScopes(
+    bool $as_string = FALSE
+  ): array|string {
+    $scopes = trim(static::AUTH0_DEFAULT_SCOPES);
+
+    if ($as_string) {
+      return $scopes;
+    }
+
+    return explode(' ', $scopes);
   }
 
   /**
@@ -220,22 +223,8 @@ class ConfigurationService implements ConfigurationServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function getLogoutReturnUrl(): ?string {
-    return $this->get('auth0_logout_return_url') ?: NULL;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function isOfflineAccess(): bool {
     return (bool) $this->get('auth0_allow_offline_access', FALSE);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getSecretBase64Encoded(): bool {
-    return (bool) $this->get('auth0_secret_base64_encoded', FALSE);
   }
 
   /**
@@ -248,13 +237,6 @@ class ConfigurationService implements ConfigurationServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function getJwtSigningAlgorithm(): string {
-    return $this->get('auth0_jwt_signature_alg', static::DEFAULT_JWT_ALGORITHM);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getFormTitle(): string {
     return $this->get('auth0_form_title', '');
   }
@@ -262,22 +244,8 @@ class ConfigurationService implements ConfigurationServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function isAllowSignup(): bool {
-    return (bool) $this->get('auth0_allow_signup', FALSE);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function isRequiresVerifiedEmail(): bool {
     return (bool) $this->get('auth0_requires_verified_email', FALSE);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isJoinUserByMailEnabled(): bool {
-    return (bool) $this->get('auth0_join_user_by_mail_enabled', FALSE);
   }
 
   /**
@@ -299,13 +267,6 @@ class ConfigurationService implements ConfigurationServiceInterface {
    */
   public function getLockExtraSettings(): string {
     return $this->get('auth0_lock_extra_settings', '{}');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isAutoRegister(): bool {
-    return (bool) $this->get('auth0_auto_register', FALSE);
   }
 
   /**
@@ -384,6 +345,13 @@ class ConfigurationService implements ConfigurationServiceInterface {
   }
 
   /**
+   * @inheritDoc
+   */
+  public function isSyncRoleMapping(): bool {
+    return (bool) $this->get('auth0_sync_role_mapping', FALSE);
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getRoleMappingRules(): array {
@@ -412,6 +380,13 @@ class ConfigurationService implements ConfigurationServiceInterface {
   }
 
   /**
+   * @inheritDoc
+   */
+  public function isSyncClaimMapping(): bool {
+    return (bool) $this->get('auth0_sync_claim_mapping', FALSE);
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getProfileFieldMappingRules(): array {
@@ -436,13 +411,6 @@ class ConfigurationService implements ConfigurationServiceInterface {
     }
 
     return $rules;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getDefaultRole(): string {
-    return $this->get('default_role', 'authenticated');
   }
 
   /**

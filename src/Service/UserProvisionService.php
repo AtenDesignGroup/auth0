@@ -6,7 +6,6 @@ namespace Drupal\auth0\Service;
 
 use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
-use Drupal\externalauth\Authmap;
 use Drupal\externalauth\ExternalAuth;
 use Drupal\auth0\ValueObject\Auth0User;
 use Drupal\Core\Logger\LoggerChannelInterface;
@@ -24,8 +23,6 @@ class UserProvisionService implements UserProvisionServiceInterface {
   protected const string AUTH0_PROVIDER = 'auth0';
 
   /**
-   * @param \Drupal\externalauth\Authmap $authmap
-   *   The authmap service.
    * @param \Drupal\externalauth\ExternalAuth $externalAuth
    *   The external auth service.
    * @param \Drupal\auth0\Service\ConfigurationService $configurationService
@@ -36,7 +33,6 @@ class UserProvisionService implements UserProvisionServiceInterface {
    *   The entity type manager for role validation.
    */
   public function __construct(
-    protected Authmap $authmap,
     protected ExternalAuth $externalAuth,
     protected ConfigurationService $configurationService,
     protected LoggerChannelInterface $logger,
@@ -61,9 +57,28 @@ class UserProvisionService implements UserProvisionServiceInterface {
     if ($userId === NULL) {
       return NULL;
     }
+    $account = $this->externalAuth->login(
+      $userId,
+      static::AUTH0_PROVIDER
+    );
+
+    if ($account instanceof UserInterface) {
+      $rolesSynced = $this->syncAccountRoles(
+        $account, $user
+      );
+      $fieldsSynced = $this->syncAccountProfileFields(
+        $account, $user
+      );
+
+      if ($rolesSynced || $fieldsSynced) {
+        $account->save();
+      }
+
+      return $account;
+    }
     $name = $this->generateUsername($user);
 
-    return $this->externalAuth->loginRegister(
+    $account = $this->externalAuth->register(
       $userId,
       static::AUTH0_PROVIDER,
       [
@@ -71,8 +86,9 @@ class UserProvisionService implements UserProvisionServiceInterface {
         'email' => $user->email(),
         'roles' => $this->mapAuth0Roles($user),
         ...$this->mapAuth0ProfileFields($user),
-      ]
-    );
+      ]);
+
+    return $this->userLoginFinalize($account, $userId, static::AUTH0_PROVIDER);
   }
 
   /**
@@ -105,6 +121,81 @@ class UserProvisionService implements UserProvisionServiceInterface {
   }
 
   /**
+   * Sync account roles.
+   *
+   * @param \Drupal\user\UserInterface $account
+   *   The Drupal user account.
+   * @param \Drupal\auth0\ValueObject\Auth0User $user
+   *   The Auth0 user object.
+   *
+   * @return bool
+   */
+  protected function syncAccountRoles(
+    UserInterface $account,
+    Auth0User $user
+  ): bool {
+    if (
+      !empty($this->configurationService->getRoleMapping())
+      && $this->configurationService->isSyncRoleMapping()
+    ) {
+      $account->set(
+        'roles',
+        $this->mapAuth0Roles($user)
+      );
+      return TRUE;
+    }
+
+    return FALSE;
+  }
+
+  /**
+   * Sync account profile fields.
+   *
+   * @param \Drupal\user\UserInterface $account
+   *   The Drupal user account.
+   * @param \Drupal\auth0\ValueObject\Auth0User $user
+   *   The Auth0 user object.
+   *
+   * @return bool
+   */
+  protected function syncAccountProfileFields(
+    UserInterface $account,
+    Auth0User $user
+  ): bool {
+    if (
+      !empty($this->configurationService->getClaimMapping())
+      && $this->configurationService->isSyncClaimMapping()
+    ) {
+      foreach ($this->mapAuth0ProfileFields($user) as $field => $value) {
+        if (in_array($field, $this->restrictedProfileFields(), TRUE)) {
+          continue;
+        }
+        $account->set($field, $value);
+      }
+      return TRUE;
+    }
+
+    return FALSE;
+  }
+
+  /**
+   * Define the list of restricted profile fields.
+   *
+   * @return string[]
+   */
+  protected function restrictedProfileFields(): array {
+    return [
+      'uid',
+      'init',
+      'name',
+      'uuid',
+      'pass',
+      'roles',
+      'status',
+    ];
+  }
+
+  /**
    * Get the username from the Auth0 user.
    */
   protected function generateUsername(
@@ -128,7 +219,7 @@ class UserProvisionService implements UserProvisionServiceInterface {
       return $this->mapUserRoles($auth0User, $mappingRules);
     }
 
-    return [$this->getDefaultRole()];
+    return [];
   }
 
   /**
@@ -159,16 +250,6 @@ class UserProvisionService implements UserProvisionServiceInterface {
     }
 
     return array_unique($mappedRoles);
-  }
-
-  /**
-   * Get the default role from configuration.
-   *
-   * @return string
-   *   The default role ID.
-   */
-  private function getDefaultRole(): string {
-    return $this->configurationService->getDefaultRole();
   }
 
 }

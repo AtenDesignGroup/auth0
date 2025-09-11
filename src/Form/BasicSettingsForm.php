@@ -21,7 +21,7 @@ class BasicSettingsForm extends ConfigFormBase {
    *
    * @var string
    */
-  protected const string AUTH0_JWT_SIGNING_ALGORITHM = 'auth0_jwt_signature_alg';
+  protected const string AUTH0_JWT_SIGNING_ALGORITHM = '';
 
   /**
    * Constructs a new BasicSettingsForm.
@@ -62,42 +62,30 @@ class BasicSettingsForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  protected function getEditableConfigNames(): array {
-    return [
-      'auth0.settings',
-    ];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function buildForm(array $form, FormStateInterface $form_state): array {
     $form['auth0_domain'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Domain'),
       '#default_value' => $this->configurationService->getDomain(),
-      '#description' => $this->t('The Auth0 Domain for this Application, found
-      in the Auth0 Dashboard.'),
+      '#description' => $this->t('Input for the Auth0 domain for this
+      application, which can be found in the Auth0 Dashboard.'),
       '#required' => TRUE,
     ];
-
     $form['auth0_custom_domain'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Custom Domain'),
-      '#default_value' => $this->configurationService->getCustomDomain() ?? '',
-      '#description' => $this->t('Your Auth0 custom domain, if in use.'),
+      '#default_value' => $this->configurationService->getCustomDomain(),
+      '#description' => $this->t('Input a custom Auth0 domain.'),
       '#required' => FALSE,
     ];
-
     $form['auth0_client_id'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Client ID'),
       '#default_value' => $this->configurationService->getClientId(),
-      '#description' => $this->t('Client ID from the Application settings page
-      in your Auth0 dashboard.'),
+      '#description' => $this->t('Input the Client ID which can be found on the
+        Application settings page in your Auth0 dashboard.'),
       '#required' => TRUE,
     ];
-
     $form['auth0_client_secret_key'] = [
       '#type' => 'key_select',
       '#title' => $this->t('Client Secret (Key)'),
@@ -106,7 +94,6 @@ class BasicSettingsForm extends ConfigFormBase {
       Client Secret. <br/><strong>Recommended for security.</strong>'),
       '#required' => FALSE,
     ];
-
     $form['auth0_client_secret'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Client Secret (Direct)'),
@@ -121,28 +108,6 @@ class BasicSettingsForm extends ConfigFormBase {
         ],
       ],
     ];
-
-    $form['auth0_secret_base64_encoded'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Client Secret is base64 Encoded'),
-      '#default_value' => $this->configurationService->getSecretBase64Encoded(),
-      '#description' => $this->t('This is stated below the Client Secret field
-      on the Application settings page in your Auth0 dashboard.'),
-    ];
-
-    $form[static::AUTH0_JWT_SIGNING_ALGORITHM] = [
-      '#type' => 'select',
-      '#title' => $this->t('JWT Signature Algorithm'),
-      '#options' => [
-        'RS256' => $this->t('RS256'),
-      ],
-      '#default_value' => $this->configurationService->getJwtSigningAlgorithm(),
-      '#description' => $this->t('The recommended signing algorithm for the
-      JWT (JSON Web Token) used in the ID token is RS256. <br/> This setting must
-      be configured in the advanced settings for this client under the OAuth tab.'),
-      '#required' => TRUE,
-    ];
-
     $form['auth0_cookie_secret_key'] = [
       '#type' => 'key_select',
       '#title' => $this->t('Cookie Secret (Key)'),
@@ -151,7 +116,6 @@ class BasicSettingsForm extends ConfigFormBase {
       <br/><strong>Recommended for security.</strong>'),
       '#required' => FALSE,
     ];
-
     $form['auth0_cookie_secret'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Cookie Secret (Direct)'),
@@ -169,7 +133,6 @@ class BasicSettingsForm extends ConfigFormBase {
     ];
 
     $form['actions']['#type'] = 'actions';
-
     $form['actions']['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Save'),
@@ -177,7 +140,6 @@ class BasicSettingsForm extends ConfigFormBase {
     ];
 
     return $form;
-
   }
 
   /**
@@ -233,16 +195,16 @@ class BasicSettingsForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
-    // Use ConfigurationService for centralized configuration management.
+  public function submitForm(
+    array &$form,
+    FormStateInterface $form_state
+  ): void {
     $this->configurationService->setMultiple([
       'auth0_client_id' => $form_state->getValue('auth0_client_id'),
       'auth0_client_secret' => $form_state->getValue('auth0_client_secret'),
       'auth0_client_secret_key' => $form_state->getValue('auth0_client_secret_key'),
       'auth0_domain' => $form_state->getValue('auth0_domain'),
       'auth0_custom_domain' => $form_state->getValue('auth0_custom_domain'),
-      static::AUTH0_JWT_SIGNING_ALGORITHM => $form_state->getValue(static::AUTH0_JWT_SIGNING_ALGORITHM),
-      'auth0_secret_base64_encoded' => $form_state->getValue('auth0_secret_base64_encoded'),
       'auth0_cookie_secret' => $form_state->getValue('auth0_cookie_secret'),
       'auth0_cookie_secret_key' => $form_state->getValue('auth0_cookie_secret_key'),
     ]);
@@ -250,6 +212,15 @@ class BasicSettingsForm extends ConfigFormBase {
     $this->messenger()->addStatus(
       $this->t('The Auth0 settings have been saved.')
     );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getEditableConfigNames(): array {
+    return [
+      'auth0.settings',
+    ];
   }
 
 }

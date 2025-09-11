@@ -1,0 +1,61 @@
+auth0.settings:
+  type: config_object
+  label: 'Auth0 settings'
+  mapping:
+    auth0_form_title:
+      type: string
+      label: 'Form title'
+    auth0_redirect_for_sso:
+      type: boolean
+      label: 'Redirect for SSO'
+    auth0_widget_cdn:
+      type: string
+      label: 'Widget CDN URL'
+    auth0_username_claim:
+      type: string
+      label: 'Username claim'
+    auth0_login_css:
+      type: text
+      label: 'Login CSS'
+    auth0_lock_extra_settings:
+      type: string
+      label: 'Lock extra settings'
+    auth0_role_mapping:
+      type: string
+      label: 'Role mapping'
+    auth0_claim_mapping:
+      type: string
+      label: 'Claim mapping'
+    auth0_sync_role_mapping:
+      type: boolean
+      label: 'Sync role mapping'
+    auth0_sync_claim_mapping:
+      type: boolean
+      label: 'Sync claim mapping'
+    auth0_allow_offline_access:
+      type: boolean
+      label: 'Allow offline access'
+    auth0_requires_verified_email:
+      type: boolean
+      label: 'Requires verified email'
+    auth0_client_id:
+      type: string
+      label: 'Client ID'
+    auth0_client_secret:
+      type: string
+      label: 'Client secret'
+    auth0_client_secret_key:
+      type: string
+      label: 'Client secret key'
+    auth0_domain:
+      type: string
+      label: 'Auth0 domain'
+    auth0_custom_domain:
+      type: string
+      label: 'Auth0 custom domain'
+    auth0_cookie_secret:
+      type: string
+      label: 'Cookie secret'
+    auth0_cookie_secret_key:
+      type: string
+      label: 'Cookie secret key'
