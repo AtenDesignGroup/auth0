@@ -102,38 +102,8 @@ class ConfigurationService implements ConfigurationServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function resolveDomain(): string {
-    return $this->getCustomDomain() ?: $this->getDomain();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getDomain(): string {
     return $this->get('auth0_domain', '');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getCustomDomain(): ?string {
-    return $this->get('auth0_custom_domain') ?: NULL;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getDomainTenantCdn(): string {
-    $domain = $this->getDomain();
-
-    if (preg_match('/\.([^.]+)\.auth0\.com$/', $domain, $matches)) {
-      $region = $matches[1];
-      return $region === 'us'
-        ? 'https://cdn.auth0.com'
-        : "https://cdn.$region.auth0.com";
-    }
-
-    return 'https://cdn.auth0.com';
   }
 
   /**
@@ -167,6 +137,20 @@ class ConfigurationService implements ConfigurationServiceInterface {
   /**
    * {@inheritdoc}
    */
+  public function getClientSecretKey(): ?string {
+    return $this->get('auth0_client_secret_key');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCookieSecretKey(): ?string {
+    return $this->get('auth0_cookie_secret_key');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getCookieSecret(): string {
     $key_id = $this->get('auth0_cookie_secret_key');
 
@@ -182,20 +166,6 @@ class ConfigurationService implements ConfigurationServiceInterface {
     }
 
     return $direct_value;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getClientSecretKey(): ?string {
-    return $this->get('auth0_client_secret_key');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getCookieSecretKey(): ?string {
-    return $this->get('auth0_cookie_secret_key');
   }
 
   /**
@@ -223,27 +193,6 @@ class ConfigurationService implements ConfigurationServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function isOfflineAccess(): bool {
-    return (bool) $this->get('auth0_allow_offline_access', FALSE);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isRedirectForSso(): bool {
-    return (bool) $this->get('auth0_redirect_for_sso', FALSE);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getFormTitle(): string {
-    return $this->get('auth0_form_title', '');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function isRequiresVerifiedEmail(): bool {
     return (bool) $this->get('auth0_requires_verified_email', FALSE);
   }
@@ -253,20 +202,6 @@ class ConfigurationService implements ConfigurationServiceInterface {
    */
   public function getUsernameClaim(): string {
     return $this->get('auth0_username_claim', static::DEFAULT_USERNAME_CLAIM);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getLoginCss(): ?string {
-    return $this->get('auth0_login_css') ?: NULL;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getLockExtraSettings(): string {
-    return $this->get('auth0_lock_extra_settings', '{}');
   }
 
   /**
@@ -288,13 +223,6 @@ class ConfigurationService implements ConfigurationServiceInterface {
    */
   public function getRoleMapping(): ?string {
     return $this->get('auth0_role_mapping') ?: NULL;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getWidgetCdn(): ?string {
-    return $this->get('auth0_widget_cdn') ?: NULL;
   }
 
   /**

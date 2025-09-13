@@ -129,61 +129,7 @@ class ConfigurationServiceTest extends UnitTestCase {
     $this->assertEquals('cookie_key_value', $this->service->getCookieSecret());
   }
 
-  /**
-   * Tests isOfflineAccess method returns correct boolean value.
-   */
-  public function testIsOfflineAccess(): void {
-    $this->config->method('get')
-      ->willReturnCallback(function() {
-        return [
-          'auth0_allow_offline_access' => TRUE,
-        ];
-      });
 
-    $this->assertTrue($this->service->isOfflineAccess());
-  }
-
-  /**
-   * Tests getJwtSigningAlgorithm method returns configured algorithm.
-   */
-  public function testGetJwtSigningAlgorithm(): void {
-    $this->config->method('get')
-      ->willReturnCallback(function() {
-        return [
-          'auth0_jwt_signature_alg' => 'HS256',
-        ];
-      });
-
-    $this->assertEquals('HS256', $this->service->getJwtSigningAlgorithm());
-  }
-
-  /**
-   * Tests getJwtSigningAlgorithm method returns default when not configured.
-   */
-  public function testGetJwtSigningAlgorithmDefault(): void {
-    $this->config->method('get')
-      ->willReturnCallback(function() {
-        return [
-          'auth0_jwt_signature_alg' => NULL,
-        ];
-      });
-
-    $this->assertEquals('RS256', $this->service->getJwtSigningAlgorithm());
-  }
-
-  /**
-   * Tests getSecretBase64Encoded method returns correct boolean value.
-   */
-  public function testGetSecretBase64Encoded(): void {
-    $this->config->method('get')
-      ->willReturnCallback(function() {
-        return [
-          'auth0_secret_base64_encoded' => TRUE,
-        ];
-      });
-
-    $this->assertTrue($this->service->getSecretBase64Encoded());
-  }
 
   public function testGetCustomDomain(): void {
     $this->config->method('get')
@@ -196,27 +142,7 @@ class ConfigurationServiceTest extends UnitTestCase {
     $this->assertEquals('auth.example.com', $this->service->getCustomDomain());
   }
 
-  public function testGetFormTitle(): void {
-    $this->config->method('get')
-      ->willReturnCallback(function() {
-        return [
-          'auth0_form_title' => 'Sign In',
-        ];
-      });
 
-    $this->assertEquals('Sign In', $this->service->getFormTitle());
-  }
-
-  public function testIsAllowSignup(): void {
-    $this->config->method('get')
-      ->willReturnCallback(function() {
-        return [
-          'auth0_allow_signup' => TRUE,
-        ];
-      });
-
-    $this->assertTrue($this->service->isAllowSignup());
-  }
 
   public function testGetUsernameClaim(): void {
     $this->config->method('get')
@@ -419,23 +345,15 @@ class ConfigurationServiceTest extends UnitTestCase {
     $this->config->method('get')
       ->willReturnCallback(function() {
         return [
-          'auth0_allow_offline_access' => '1',
-          'auth0_secret_base64_encoded' => 0,
-          'auth0_redirect_for_sso' => 'true',
-          'auth0_allow_signup' => 1,
           'auth0_requires_verified_email' => '',
-          'auth0_join_user_by_mail_enabled' => 'false',
-          'auth0_auto_register' => NULL,
+          'auth0_sync_role_mapping' => 1,
+          'auth0_sync_claim_mapping' => '0',
         ];
       });
 
-    $this->assertTrue($this->service->isOfflineAccess());
-    $this->assertFalse($this->service->getSecretBase64Encoded());
-    $this->assertTrue($this->service->isRedirectForSso());
-    $this->assertTrue($this->service->isAllowSignup());
     $this->assertFalse($this->service->isRequiresVerifiedEmail());
-    $this->assertTrue($this->service->isJoinUserByMailEnabled()); // Non-empty string is truthy
-    $this->assertFalse($this->service->isAutoRegister());
+    $this->assertTrue($this->service->isSyncRoleMapping()); // 1 should be truthy
+    $this->assertFalse($this->service->isSyncClaimMapping()); // '0' should be falsy
   }
 
   public function testGetUsernameClaimDefault(): void {
@@ -454,24 +372,16 @@ class ConfigurationServiceTest extends UnitTestCase {
       ->willReturnCallback(function() {
         return [
           'auth0_custom_domain' => '',
-          'auth0_logout_return_url' => NULL,
-          'auth0_login_css' => '',
-          'auth0_lock_extra_settings' => NULL,
           'auth0_claim_mapping' => '',
           'auth0_claim_to_use_for_role' => '',
           'auth0_role_mapping' => NULL,
-          'auth0_widget_cdn' => '',
         ];
       });
 
     $this->assertNull($this->service->getCustomDomain());
-    $this->assertNull($this->service->getLogoutReturnUrl());
-    $this->assertNull($this->service->getLoginCss());
-    $this->assertEquals($this->service->getLockExtraSettings(), '{}');
     $this->assertNull($this->service->getClaimMapping());
     $this->assertNull($this->service->getClaimToUseForRole());
     $this->assertNull($this->service->getRoleMapping());
-    $this->assertNull($this->service->getWidgetCdn());
   }
 
   /**

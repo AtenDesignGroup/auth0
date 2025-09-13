@@ -33,10 +33,9 @@ class MigrationTest extends KernelTestBase {
     $this->assertTrue(method_exists($service, 'getClientId'));
     $this->assertTrue(method_exists($service, 'getClientSecret'));
     $this->assertTrue(method_exists($service, 'getCookieSecret'));
-    $this->assertTrue(method_exists($service, 'isOfflineAccess'));
-    $this->assertTrue(method_exists($service, 'isRedirectForSso'));
-    $this->assertTrue(method_exists($service, 'getFormTitle'));
-    $this->assertTrue(method_exists($service, 'isAllowSignup'));
+    $this->assertTrue(method_exists($service, 'isRequiresVerifiedEmail'));
+    $this->assertTrue(method_exists($service, 'isSyncRoleMapping'));
+    $this->assertTrue(method_exists($service, 'isSyncClaimMapping'));
     $this->assertTrue(method_exists($service, 'getUsernameClaim'));
     $this->assertTrue(method_exists($service, 'getClaimMapping'));
     $this->assertTrue(method_exists($service, 'getRoleMapping'));

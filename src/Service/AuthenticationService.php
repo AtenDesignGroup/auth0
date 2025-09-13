@@ -76,12 +76,9 @@ class AuthenticationService implements AuthenticationServiceInterface {
    */
   public function handleLoginPage(Request $request): array|Response {
     try {
-      if ($this->configurationService->isRedirectForSso()) {
-        return new TrustedRedirectResponse(
-          $this->clientService->loginUrl()
-        );
-      }
-      return $this->handleInlineLoginForm($request);
+      return new TrustedRedirectResponse(
+        $this->clientService->loginUrl()
+      );
     }
     catch (\Exception) {
       return new RedirectResponse('/');
@@ -127,45 +124,5 @@ class AuthenticationService implements AuthenticationServiceInterface {
     }
   }
 
-  /**
-   * Handle the Auth0 inline login form.
-   *
-   * @param \Symfony\Component\HttpFoundation\Request $request
-   *   The current HTTP request.
-   *
-   * @return array
-   *   Return an array of renderable elements.
-   */
-  protected function handleInlineLoginForm(
-    Request $request
-  ): array {
-    $returnTo = $request->get('returnTo');
-
-    return [
-      '#theme' => 'auth0_login',
-      '#loginCSS' => $this->configurationService->getLoginCss(),
-      '#attached' => [
-        'library' => [
-          'auth0/auth0.lock',
-        ],
-        'drupalSettings' => [
-          'auth0' => [
-            'state' => $this->getState(),
-            'nonce' => $this->getNonce(),
-            'domain' => $this->configurationService->resolveDomain(),
-            'scopes' => $this->configurationService->getDefaultScopes(),
-            'clientId' => $this->configurationService->getClientId(),
-            'formTitle' => $this->configurationService->getFormTitle(),
-            'showSignup' => $this->configurationService->isAllowSignup(),
-            'callbackURL' => $this->configurationService->redirectUri(),
-            'offlineAccess' => $this->configurationService->isOfflineAccess(),
-            'lockExtraSettings' => $this->configurationService->getLockExtraSettings(),
-            'configurationBaseUrl' => $this->configurationService->getDomainTenantCdn(),
-            'jsonErrorMsg' => $this->t('There was an error parsing the "Lock extra settings" field.'),
-          ],
-        ],
-      ],
-    ];
-  }
 
 }

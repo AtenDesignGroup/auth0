@@ -25,28 +25,6 @@ interface ConfigurationServiceInterface {
   public function getDomain(): string;
 
   /**
-   * Resolve the Auth0 custom or default domain.
-   *
-   * @return string
-   */
-  public function resolveDomain(): string;
-
-  /**
-   * Gets the Auth0 custom domain.
-   *
-   * @return string|null
-   *   The Auth0 custom domain or NULL if not configured.
-   */
-  public function getCustomDomain(): ?string;
-
-  /**
-   * Gets the Auth0 domain tenant CDN.
-   *
-   * @return string
-   */
-  public function getDomainTenantCdn(): string;
-
-  /**
    * Gets the Auth0 client ID.
    *
    * @return string
@@ -102,30 +80,6 @@ interface ConfigurationServiceInterface {
   public function getDefaultScopes(bool $as_string = FALSE): array|string;
 
   /**
-   * Checks if offline access is enabled.
-   *
-   * @return bool
-   *   TRUE if offline access is enabled, FALSE otherwise.
-   */
-  public function isOfflineAccess(): bool;
-
-  /**
-   * Checks if redirect for SSO is enabled.
-   *
-   * @return bool
-   *   TRUE if redirect for SSO is enabled, FALSE otherwise.
-   */
-  public function isRedirectForSso(): bool;
-
-  /**
-   * Gets the form title.
-   *
-   * @return string
-   *   The Auth0 form title.
-   */
-  public function getFormTitle(): string;
-
-  /**
    * Checks if verified email is required.
    *
    * @return bool
@@ -142,36 +96,12 @@ interface ConfigurationServiceInterface {
   public function getUsernameClaim(): string;
 
   /**
-   * Gets the login CSS.
-   *
-   * @return string|null
-   *   The login CSS or NULL if not configured.
-   */
-  public function getLoginCss(): ?string;
-
-  /**
-   * Gets the Lock extra settings.
-   *
-   * @return string|null
-   *   The Lock extra settings or NULL if not configured.
-   */
-  public function getLockExtraSettings(): ?string;
-
-  /**
    * Gets the claim to use for role mapping.
    *
    * @return string|null
    *   The claim to use for role mapping or NULL if not configured.
    */
   public function getClaimToUseForRole(): ?string;
-
-  /**
-   * Gets the widget CDN URL.
-   *
-   * @return string|null
-   *   The widget CDN URL or NULL if not configured.
-   */
-  public function getWidgetCdn(): ?string;
 
   /**
    * Gets a configuration value by key.

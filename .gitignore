@@ -2,6 +2,7 @@
 /vendor
 /web
 /.claude
+CLAUDE.md
 /.agent-os
 /.editorconfig
 /.gitattributes

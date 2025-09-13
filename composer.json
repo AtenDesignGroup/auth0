@@ -38,6 +38,9 @@
             "url": "https://packages.drupal.org/8"
         }
     ],
+    "scripts": {
+        "test": "vendor/bin/phpunit"
+    },
     "require": {
         "auth0/auth0-php": "^8.3",
         "drupal/key": "^1.20",

@@ -67,70 +67,12 @@ class BasicAdvancedForm extends ConfigFormBase {
       '#default_value' => $this->configurationService->isRequiresVerifiedEmail(),
       '#description' => $this->t('If checked, the user must have a verified email to log in.'),
     ];
-    $form['auth0_redirect_for_sso'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Universal Login'),
-      '#default_value' => $this->configurationService->isRedirectForSso(),
-      '#description' => $this->t('Use the Auth0 Universal Login hosted login
-        solution. Otherwise, use the embedded login widget.
-         <a href="@link" target="_blank">More information.</a>',
-        ['@link' => 'https://auth0.com/docs/universal-login']
-      ),
-    ];
-    $form['auth0_login_embedded'] = [
-      '#type' => 'details',
-      '#title' => $this->t('Embedded Widget Login'),
-      '#open' => TRUE,
-      '#tree' => FALSE,
-      '#states' => [
-        'visible' => [
-          ':input[name="auth0_redirect_for_sso"]' => ['checked' => FALSE],
-        ],
-      ],
-    ];
-    $form['auth0_login_embedded']['auth0_form_title'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Form title'),
-      '#default_value' => $this->configurationService->getFormTitle() ?: $this->t('Sign In'),
-      '#description' => $this->t('This is the title for the login widget.'),
-    ];
-    $form['auth0_login_embedded']['auth0_allow_offline_access'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Allow offline access'),
-      '#default_value' => $this->configurationService->isOfflineAccess(),
-      '#description' => $this->t('Allow offline access.
-        <a href="@link" target="_blank">More information.</a>',
-        ['@link' => 'https://auth0.com/docs/api-auth/tutorials/adoption/refresh-tokens']
-      ),
-    ];
-    $form['auth0_login_embedded']['auth0_widget_cdn'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Lock JS CDN URL'),
-      '#default_value' => $this->configurationService->getWidgetCdn(),
-      '#description' => $this->t(
-        'Point this to the latest Lock JS version available in the CDN.
-        <a href="https://github.com/auth0/lock/releases" target="_blank">
-        Available Lock JS versions.</a>'),
-    ];
-    $form['auth0_login_embedded']['auth0_login_css'] = [
-      '#type' => 'textarea',
-      '#title' => $this->t('Login widget CSS'),
-      '#default_value' => $this->configurationService->getLoginCss(),
-      '#description' => $this->t('CSS to control the Auth0 login form appearance.'),
-    ];
-    $form['auth0_login_embedded']['auth0_lock_extra_settings'] = [
-      '#type' => 'textarea',
-      '#title' => $this->t('Lock extra settings'),
-      '#default_value' => $this->configurationService->getLockExtraSettings(),
-      '#description' => $this->t('Valid JSON to pass to the Lock options parameter. Options passed here will override Drupal admin settings. <a href="@link" target="_blank">More information and examples.</a>', ['@link' => 'https://auth0.com/docs/libraries/lock/v11/configuration']),
-    ];
     $form['auth0_user_mapping'] = [
       '#type' => 'details',
       '#title' => $this->t('User Mapping'),
       '#open' => TRUE,
       '#tree' => FALSE,
     ];
-
     $form['auth0_user_mapping']['auth0_username_claim'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Map Auth0 claims to Drupal username.'),
@@ -198,14 +140,6 @@ class BasicAdvancedForm extends ConfigFormBase {
     array &$form,
     FormStateInterface $form_state,
   ): void {
-    $lock_extra = $form_state->getValue('auth0_lock_extra_settings');
-
-    if (!empty($lock_extra) && !json_validate($lock_extra)) {
-      $form_state->setErrorByName('auth0_lock_extra_settings',
-        $this->t('Lock extra settings must be a valid JSON format')
-      );
-    }
-
     // Validate role mapping rules format
     $auth0_role_mapping = $form_state->getValue('auth0_role_mapping');
     if (!empty($auth0_role_mapping)) {
@@ -216,7 +150,7 @@ class BasicAdvancedForm extends ConfigFormBase {
           continue;
         }
 
-        // Check for valid pipe separator
+        // Check for a valid pipe separator
         if (!str_contains($line, '|')) {
           $form_state->setErrorByName('auth0_role_mapping',
             $this->t('Invalid format. Use "auth0_role|drupal_role".')
@@ -240,7 +174,7 @@ class BasicAdvancedForm extends ConfigFormBase {
           continue;
         }
 
-        // Check if Drupal role exists (except for built-in roles)
+        // Check if a Drupal role exists (except for built-in roles)
         if (!in_array($drupal_role, ['authenticated', 'anonymous'])) {
           $role_storage = $this->entityTypeManager->getStorage('user_role');
           if (!$role_storage->load($drupal_role)) {
@@ -263,17 +197,11 @@ class BasicAdvancedForm extends ConfigFormBase {
     FormStateInterface $form_state,
   ): void {
     $this->configurationService->setMultiple([
-      'auth0_form_title' => $form_state->getValue('auth0_form_title'),
-      'auth0_redirect_for_sso' => $form_state->getValue('auth0_redirect_for_sso'),
-      'auth0_widget_cdn' => $form_state->getValue('auth0_widget_cdn'),
       'auth0_username_claim' => $form_state->getValue('auth0_username_claim'),
-      'auth0_login_css' => $form_state->getValue('auth0_login_css'),
-      'auth0_lock_extra_settings' => $form_state->getValue('auth0_lock_extra_settings'),
       'auth0_role_mapping' => $form_state->getValue('auth0_role_mapping'),
       'auth0_claim_mapping' => $form_state->getValue('auth0_claim_mapping'),
       'auth0_sync_role_mapping' => $form_state->getValue('auth0_sync_role_mapping'),
       'auth0_sync_claim_mapping' => $form_state->getValue('auth0_sync_claim_mapping'),
-      'auth0_allow_offline_access' => $form_state->getValue('auth0_allow_offline_access'),
       'auth0_requires_verified_email' => $form_state->getValue('auth0_requires_verified_email'),
     ]);
 

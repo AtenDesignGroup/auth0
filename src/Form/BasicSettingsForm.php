@@ -71,13 +71,6 @@ class BasicSettingsForm extends ConfigFormBase {
       application, which can be found in the Auth0 Dashboard.'),
       '#required' => TRUE,
     ];
-    $form['auth0_custom_domain'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Custom Domain'),
-      '#default_value' => $this->configurationService->getCustomDomain(),
-      '#description' => $this->t('Input a custom Auth0 domain.'),
-      '#required' => FALSE,
-    ];
     $form['auth0_client_id'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Client ID'),
@@ -154,15 +147,6 @@ class BasicSettingsForm extends ConfigFormBase {
       );
     }
 
-    // Validate Custom Domain format (if provided)
-    $custom_domain = $form_state->getValue('auth0_custom_domain');
-    if (!empty($custom_domain) && !preg_match('/^[a-zA-Z0-9\-_]+\.[a-zA-Z]{2,}$/', $custom_domain)) {
-      $form_state->setErrorByName(
-        'auth0_custom_domain',
-        $this->t('Please enter a valid custom domain')
-      );
-    }
-
     // Validate Client Secret - either Key or direct value required.
     $client_secret_key = $form_state->getValue('auth0_client_secret_key');
     $client_secret = $form_state->getValue('auth0_client_secret');
@@ -204,7 +188,6 @@ class BasicSettingsForm extends ConfigFormBase {
       'auth0_client_secret' => $form_state->getValue('auth0_client_secret'),
       'auth0_client_secret_key' => $form_state->getValue('auth0_client_secret_key'),
       'auth0_domain' => $form_state->getValue('auth0_domain'),
-      'auth0_custom_domain' => $form_state->getValue('auth0_custom_domain'),
       'auth0_cookie_secret' => $form_state->getValue('auth0_cookie_secret'),
       'auth0_cookie_secret_key' => $form_state->getValue('auth0_cookie_secret_key'),
     ]);

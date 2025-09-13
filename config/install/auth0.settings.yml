@@ -1,29 +1,12 @@
-auth0_form_title: 'Sign In'
-auth0_redirect_for_sso: true
-auth0_widget_cdn: '//cdn.auth0.com/js/lock/13.2.0/lock.min.js'
 auth0_username_claim: 'nickname'
-auth0_login_css: |
-  #a0-widget .a0-panel {
-      min-width: 90%;
-      padding: 5%;
-      box-shadow: none;
-      -webkit-box-shadow: none;
-  }
-  #a0-widget .a0-panel {
-      background-color: #f6f6f2;
-      border-color: #f9f9f9;
-  }
-auth0_lock_extra_settings: ''
 auth0_role_mapping: ''
 auth0_claim_mapping: ''
 auth0_sync_role_mapping: false
 auth0_sync_claim_mapping: false
-auth0_allow_offline_access: false
 auth0_requires_verified_email: false
 auth0_client_id: ''
 auth0_client_secret: ''
 auth0_client_secret_key: ''
 auth0_domain: ''
-auth0_custom_domain: ''
 auth0_cookie_secret: ''
 auth0_cookie_secret_key: ''
