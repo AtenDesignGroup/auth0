@@ -1,12 +1,15 @@
-Drupal 8 Module for Auth0
+Drupal Auth0 Module (5.x)
 ====
 
-This plugin replaces standard Drupal 8 login forms with one powered by Auth0 that enables social, passwordless, and enterprise connection login as well as additional security, multifactor auth, and user statistics.
+This module integrates Auth0's Universal Login with Drupal, providing social, passwordless, and enterprise connection login as well as additional security, multifactor authentication, and user analytics.
 
-Drupal 7 is supported only on v1. If you want to contribute to the codebase, please push your PRs against the `1.x.x` branch. Note that this branch is not regularly maintained.
+The 5.x version uses Auth0's Universal Login exclusively and integrates with Drupal's External Auth module for streamlined user authentication and management.
+
+**Important:** This version (5.x) no longer supports the embedded Auth0 Lock widget. All authentication is handled through Auth0's Universal Login page, providing better security and feature support.
 
 ## Table of Contents
 
+- [What's New in 5.x](#whats-new-in-5x)
 - [Installation](#installation)
 - [Getting Started](#getting-started)
 - [Contribution](#contribution)
@@ -15,11 +18,48 @@ Drupal 7 is supported only on v1. If you want to contribute to the codebase, ple
 - [What is Auth0](#what-is-auth0)
 - [License](#license)
 
+## What's New in 5.x
+
+The 5.x version represents a major modernization of the Auth0 Drupal module with significant architectural changes:
+
+### Key Changes
+
+- **Universal Login Only:** Removed the embedded Auth0 Lock widget. All authentication now uses Auth0's Universal Login page for better security and feature compatibility.
+
+- **External Auth Integration:** Now uses Drupal's External Auth module for user authentication handling, providing better integration with Drupal's user system.
+
+- **Streamlined Configuration:** Simplified configuration options focused on essential settings. Removed obsolete options like Widget CDN, Lock settings, and form customization.
+
+- **Enhanced Security:** New Cookie Secret requirement and improved Key module integration for secure credential storage.
+
+- **Modern Architecture:** Refactored authentication service with clean interfaces and improved error handling.
+
+### Removed Features
+
+- Embedded Lock widget/form
+- Widget CDN configuration
+- Lock extra settings and CSS customization
+- Form title and signup settings (now handled by Auth0's Universal Login)
+
+### Migration from 4.x
+
+If upgrading from 4.x, note that:
+- The embedded login form will no longer appear - users will be redirected to Auth0
+- Lock-specific configurations will be ignored
+- You'll need to configure a Cookie Secret
+- Consider using the Key module for credential security
+
 ## Installation
 
-Before you start, **make sure the admin user has a valid email that you own**. This module delegates the site authentication to Auth0. That means that you won't be using the Drupal database to authenticate users (user records will still be created) and the default login box will not be shown.
+Before you start, **make sure the admin user has a valid email that you own**. This module delegates the site authentication to Auth0 using Universal Login. That means that you won't be using the Drupal database to authenticate users (user records will still be created) and users will be redirected to Auth0's login page.
 
-**Please note:** the Auth0 login form will not appear until the module has been configured (see [Getting Started](#getting-started) below).
+**Please note:** Auth0 authentication will not work until the module has been configured (see [Getting Started](#getting-started) below).
+
+### Dependencies
+
+This module requires:
+- **External Auth module** (automatically installed via Composer) - handles user authentication integration
+- **Key module** (automatically installed via Composer) - provides secure storage for Auth0 credentials
 
 ### Install from Drupal.org with Composer
 
@@ -29,7 +69,7 @@ Before you start, **make sure the admin user has a valid email that you own**. T
 $ composer require drupal/auth0
 ```
 
-2. In Manage > Extend, scroll down the the Auth0 module, click the checkbox, then click **Install**
+1. In Manage > Extend, scroll down to the Auth0 module, click the checkbox, then click **Install**
 
 ## Getting Started
 
@@ -47,47 +87,85 @@ Once the module is installed, you'll need to create an Application for your Drup
 https://yourdomain.com/auth0/callback
 ```
 
-6. In the "Allowed Web Origins," "Allowed Logout URLs," and "Allowed Origins (CORS)" fields, add the domain of your Drupal site including the protocol but without a trailing slash like:
+1. In the "Allowed Web Origins," "Allowed Logout URLs," and "Allowed Origins (CORS)" fields, add the domain of your Drupal site including the protocol but without a trailing slash like:
 
 ```
 https://yourdomain.com
 ```
 
-7. Scroll down and click **Save Changes**.
+1. Scroll down and click **Save Changes**.
 
 Leave this tab open to copy the configuration needed in the next section. 
 
 ### 2. Configure the Auth0 module
 
 1. Go to Manage > Configuration > System > Auth0
-2. Under the **Settings** tab, copy and paste the values for the 3 required fields from the Application settings screen in the Auth0 dashboard. You can also save dummy values and override them using Drupal's built in config override system ([explained here](https://www.drupal.org/docs/8/api/configuration-api/configuration-override-system)) in your `settings.php` file:
+2. Under the **Settings** tab, configure the required Auth0 Application settings:
+
+   - **Domain:** Your Auth0 domain (e.g., `your-tenant.auth0.com`)
+   - **Client ID:** From your Auth0 Application settings
+   - **Client Secret:** Use either the Key module (recommended for security) or enter directly
+   - **Cookie Secret:** Required for session security - use Key module or enter directly (min 32 characters)
+
+   For production environments, it's recommended to use the Key module for storing secrets securely.
+
+3. Alternatively, you can override these settings using Drupal's configuration override system in your `settings.php` file:
 
 ```php
 $config['auth0.settings']['auth0_client_id'] = getenv('AUTH0_CLIENT_ID');
 $config['auth0.settings']['auth0_client_secret'] = getenv('AUTH0_CLIENT_SECRET');
 $config['auth0.settings']['auth0_domain'] = getenv('AUTH0_DOMAIN');
+$config['auth0.settings']['auth0_cookie_secret'] = getenv('AUTH0_COOKIE_SECRET');
 ```
 
-4. Click **Save** and your Auth0 login form should now be showing on the login page. To test this, open a new browser (or private/incognito window) and navigate to your login page at `/user/login`.
+1. Click **Save** and Auth0 authentication should now be active. To test this, open a new browser (or private/incognito window) and navigate to your login page at `/user/login`. You should be redirected to Auth0's Universal Login page.
 
-### 3. Advanced configuration
+#### Legacy Login Access
 
-Under the **Advanced** tab in the same settings screen, you can configure the following:
+If you need to access the standard Drupal login form (for emergencies or admin access), you can still reach it at `/user/login/legacy`. This bypass allows you to log in with local Drupal accounts when needed.
 
-- **Form title:** Change the title on the Auth0 login form.
-- **Allow user signup:** Include the Sign Up tab on the Auth0 login form.
-- **Send a Refresh Token:** Include a refresh token in the returned profile data from Auth0 when logging in.
-- **Redirect login for SSO:** Use the Universal Login Page to enable SSO. You'll need to add your Drupal site home page to the Tenant Settings > Advanced > "Allowed Logout URLs" field if this is enabled. 
-- **Widget CDN:** URL to the Lock JS file in the Auth0 CDN. In general, this should not be changed unless upgrading to a new version or if instructed by Auth0 support. 
-- **Requires verified email:** Enable this setting to require Auth0 users to have a verified email in order to login. Please note that this will prevent users without email addresses (e.g. Twitter users) from logging in.
-- **Link Auth0 logins to Drupal users:** Enabling this setting will match incoming successful logins to a Drupal user using their email address.
-- **Map Auth0 claim to Drupal user name:** This will use the specified ID token claim to set the Drupal username. 
-- **Login widget css:** Additional CSS to output on the login page. 
-- **Lock extra settings:** Additional settings to change the Auth0 login form's behavior and appearance. [See here for more details and examples](https://auth0.com/docs/libraries/lock/v11/configuration). 
-- **Auto Register Auth0 users:** This will register new Drupal users from incoming Auth0 ones, even if registration on your site is off. This makes it possible to create a user in Auth0 but not in Drupal and have a new Drupal user created when they log in.
-- **Mapping of Claims to Profile Fields:** Follow the directions below this field to save incoming Auth0 ID token claims as Drupal profile fields.
-- **Claim for Role Mapping:** Name of the ID token claim to map incoming data from Auth0 to Drupal roles.  
-- **Mapping of Claim Role Values:** Follow the directions below this field to set Drupal roles for users based on incoming Auth0 data.
+### 3. Advanced Configuration
+
+Click on the **Advanced** tab to configure additional user mapping and authentication options:
+
+#### User Authentication Options
+
+- **Requires verified email:** Enable this setting to require Auth0 users to have a verified email address to log in. This will prevent users without verified emails (e.g., some social login users) from accessing your site.
+
+#### User Mapping
+
+- **Map Auth0 claims to Drupal username:** Specify which Auth0 ID token claim to use for the Drupal username (default: `nickname`). Common options include `email`, `preferred_username`, or `nickname`.
+
+#### Profile Field Mapping
+
+- **Mapping of Claims to Profile Fields:** Map Auth0 user profile data to Drupal user fields. Enter one mapping per line in the format:
+  ```
+  auth0_claim_name|drupal_field_name
+  ```
+  Example:
+  ```
+  given_name|field_first_name
+  family_name|field_last_name
+  picture|field_user_picture
+  ```
+
+- **Sync claim mapping on login:** When enabled, profile fields will be updated from Auth0 data on every login, keeping user profiles in sync.
+
+#### Role Mapping
+
+- **Mapping of Claim Role Values to Drupal Roles:** Map Auth0 role/group data to Drupal roles. Enter one mapping per line in the format:
+  ```
+  auth0_role_value|drupal_role_name
+  ```
+  Example:
+  ```
+  admin|administrator
+  poweruser|content_editor
+  ```
+
+- **Sync role mapping on login:** When enabled, user roles will be updated from Auth0 data on every login.
+
+**Note:** The External Auth module handles the actual user provisioning and role assignment based on these mappings.
 
 ## Contribution
 
