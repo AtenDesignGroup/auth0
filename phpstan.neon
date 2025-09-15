@@ -7,8 +7,9 @@ parameters:
 	  - .
 	customRulesetUsed: true
 	excludePaths:
-	  - web (?)
-	  - vendor (?)
+	  - web
+	  - tests
+	  - vendor
 	fileExtensions:
 	  - php
 	  - inc

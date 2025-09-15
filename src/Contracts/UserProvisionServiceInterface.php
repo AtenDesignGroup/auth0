@@ -3,7 +3,6 @@
 declare(strict_types=1);
 namespace Drupal\auth0\Contracts;
 
-use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 use Drupal\auth0\ValueObject\Auth0User;
 
@@ -18,10 +17,10 @@ interface UserProvisionServiceInterface {
    * @param string $identifier
    *   The Auth0 identifier.
    *
-   * @return \Drupal\user\Entity\User|null
+   * @return \Drupal\user\UserInterface|null
    *   The Drupal user entity.
    */
-  public function findUser(string $identifier): ?User;
+  public function findUser(string $identifier): ?UserInterface;
 
   /**
    * Authenticates Auth0 user and manages the login process.

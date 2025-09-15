@@ -341,6 +341,7 @@ class ConfigurationService implements ConfigurationServiceInterface {
     return $rules;
   }
 
+
   /**
    * Loads configuration data with simple caching.
    *

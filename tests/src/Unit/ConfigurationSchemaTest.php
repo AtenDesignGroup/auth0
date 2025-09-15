@@ -82,7 +82,6 @@ class ConfigurationSchemaTest extends UnitTestCase {
       'auth0_client_secret' => 'string',
       'auth0_client_secret_key' => 'string',
       'auth0_domain' => 'string',
-      'auth0_custom_domain' => 'string',
       'auth0_cookie_secret' => 'string',
       'auth0_cookie_secret_key' => 'string',
     ];
@@ -152,7 +151,6 @@ class ConfigurationSchemaTest extends UnitTestCase {
       'auth0_client_secret',
       'auth0_client_secret_key',
       'auth0_domain',
-      'auth0_custom_domain',
       'auth0_cookie_secret',
       'auth0_cookie_secret_key',
     ];
@@ -184,7 +182,6 @@ class ConfigurationSchemaTest extends UnitTestCase {
       'auth0_client_secret', 
       'auth0_client_secret_key',
       'auth0_domain',
-      'auth0_custom_domain',
       'auth0_cookie_secret',
       'auth0_cookie_secret_key',
     ];

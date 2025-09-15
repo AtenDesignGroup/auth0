@@ -199,10 +199,11 @@ interface ConfigurationServiceInterface {
    * contain pipe-delimited mappings in the format:
    * "auth0_claim|drupal_field_name" (one per line).
    *
-   * @return array<string, array<string>>
+   * @return array<string, string>
    *   An associative array where keys are Auth0 claim names
-   *   and values are arrays of Drupal field machine names.
+   *   and values are Drupal field machine names.
    */
   public function getProfileFieldMappingRules(): array;
+
 
 }

@@ -53,11 +53,11 @@ class AuthenticationService implements AuthenticationServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function handleLogout(Request $request): Response {
+  public function handleLogout(Request $request): TrustedRedirectResponse {
     try {
       user_logout();
 
-      $return_to = $request->get(
+      $return_to = $request->query->get(
         'returnTo',
         $request->getSchemeAndHttpHost()
       );
@@ -67,7 +67,7 @@ class AuthenticationService implements AuthenticationServiceInterface {
       );
     }
     catch (\Exception) {
-      return new RedirectResponse('/');
+      return new TrustedRedirectResponse('/');
     }
   }
 
@@ -108,7 +108,7 @@ class AuthenticationService implements AuthenticationServiceInterface {
    * @throws \Drupal\auth0\Exception\AuthenticationLoginException
    */
   protected function validateLogin(Request $request): void {
-    if ($error_code = $request->get('error')) {
+    if ($error_code = $request->query->get('error')) {
       if (in_array($error_code, [
         'login_required',
         'consent_required',
@@ -117,7 +117,7 @@ class AuthenticationService implements AuthenticationServiceInterface {
       ) {
         throw new AuthenticationLoginException($error_code);
       }
-      $error_description = $this->request->get('error_description')
+      $error_description = $request->query->get('error_description')
         ?? t('An error occurred during login.');
 
       throw new AuthenticationLoginException((string) $error_description);

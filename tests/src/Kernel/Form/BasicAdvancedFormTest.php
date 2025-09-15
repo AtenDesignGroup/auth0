@@ -38,7 +38,7 @@ class BasicAdvancedFormTest extends KernelTestBase {
     // Test that form contains expected advanced Auth0 fields.
     $this->assertArrayHasKey('auth0_requires_verified_email', $form);
     $this->assertArrayHasKey('auth0_user_mapping', $form);
-    
+
     // Check nested fields under user_mapping (since #tree is FALSE, they should be accessible)
     $this->assertArrayHasKey('auth0_username_claim', $form['auth0_user_mapping']);
     $this->assertArrayHasKey('auth0_claim_mapping', $form['auth0_user_mapping']);
@@ -124,7 +124,7 @@ class BasicAdvancedFormTest extends KernelTestBase {
 
     // Mock configuration service to track what gets saved.
     $config_service = $this->createMock(ConfigurationServiceInterface::class);
-    
+
     // Expect setMultiple to be called, but verify obsolete fields are not included.
     $config_service->expects($this->once())
       ->method('setMultiple')
@@ -132,13 +132,13 @@ class BasicAdvancedFormTest extends KernelTestBase {
         // Verify obsolete fields are NOT in the data being saved.
         $obsolete_fields = [
           'auth0_form_title',
-          'auth0_redirect_for_sso', 
+          'auth0_redirect_for_sso',
           'auth0_widget_cdn',
           'auth0_login_css',
           'auth0_lock_extra_settings',
           'auth0_allow_offline_access',
         ];
-        
+
         foreach ($obsolete_fields as $field) {
           if (array_key_exists($field, $data)) {
             return false;

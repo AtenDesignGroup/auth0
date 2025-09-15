@@ -16,6 +16,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\auth0\Contracts\ClientServiceInterface;
 use Drupal\auth0\Exception\AuthenticationLoginException;
+use Drupal\auth0\Contracts\ConfigurationServiceInterface;
 
 class ClientService implements ClientServiceInterface {
 
@@ -32,7 +33,7 @@ class ClientService implements ClientServiceInterface {
    *   The request stack.
    * @param \Drupal\Core\TempStore\PrivateTempStoreFactory $tempStoreFactory
    *   The temp store factory.
-   * @param \Drupal\auth0\Service\ConfigurationService $configurationService
+   * @param \Drupal\auth0\Contracts\ConfigurationServiceInterface $configurationService
    *   The Auth0 configuration service.
    * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
    *   The logger service.
@@ -40,7 +41,7 @@ class ClientService implements ClientServiceInterface {
   public function __construct(
     RequestStack $requestStack,
     protected PrivateTempStoreFactory $tempStoreFactory,
-    protected ConfigurationService $configurationService,
+    protected ConfigurationServiceInterface $configurationService,
     protected LoggerChannelInterface $logger
   ) {
     $this->request = $requestStack->getCurrentRequest();
@@ -81,9 +82,7 @@ class ClientService implements ClientServiceInterface {
 
         return Auth0User::make(
           $userInfo,
-          $this->configurationService->isOfflineAccess()
-            ? $this->client->getRefreshToken()
-            : NULL
+          $this->client->getRefreshToken()
         );
       }
     }

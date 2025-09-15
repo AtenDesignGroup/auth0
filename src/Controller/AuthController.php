@@ -89,7 +89,7 @@ class AuthController extends ControllerBase {
    * @return \Drupal\Core\Routing\TrustedRedirectResponse
    *   The response after logout.
    */
-  public function logout(Request $request): Response {
+  public function logout(Request $request): TrustedRedirectResponse {
     return $this->authenticationService->handleLogout($request);
   }
 

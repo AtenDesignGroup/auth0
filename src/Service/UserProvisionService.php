@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Drupal\auth0\Service;
 
-use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
-use Drupal\externalauth\ExternalAuth;
 use Drupal\auth0\ValueObject\Auth0User;
 use Drupal\Core\Logger\LoggerChannelInterface;
+use Drupal\externalauth\ExternalAuthInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\auth0\Exception\Auth0SecurityException;
 use Drupal\auth0\Exception\Auth0ValidationException;
 use Drupal\auth0\Contracts\UserProvisionServiceInterface;
+use Drupal\auth0\Contracts\ConfigurationServiceInterface;
 
 /**
  * Define the Auth0 user provision service.
@@ -23,9 +23,9 @@ class UserProvisionService implements UserProvisionServiceInterface {
   protected const string AUTH0_PROVIDER = 'auth0';
 
   /**
-   * @param \Drupal\externalauth\ExternalAuth $externalAuth
+   * @param \Drupal\externalauth\ExternalAuthInterface $externalAuth
    *   The external auth service.
-   * @param \Drupal\auth0\Service\ConfigurationService $configurationService
+   * @param \Drupal\auth0\Contracts\ConfigurationServiceInterface $configurationService
    *   The Auth0 configuration service.
    * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
    *   The logger channel for Auth0 operations.
@@ -33,8 +33,8 @@ class UserProvisionService implements UserProvisionServiceInterface {
    *   The entity type manager for role validation.
    */
   public function __construct(
-    protected ExternalAuth $externalAuth,
-    protected ConfigurationService $configurationService,
+    protected ExternalAuthInterface $externalAuth,
+    protected ConfigurationServiceInterface $configurationService,
     protected LoggerChannelInterface $logger,
     protected EntityTypeManagerInterface $entityTypeManager,
   ) {}
@@ -42,7 +42,7 @@ class UserProvisionService implements UserProvisionServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function findUser(string $identifier): ?User {
+  public function findUser(string $identifier): ?UserInterface {
     return $this->externalAuth->load(
       $identifier,
       static::AUTH0_PROVIDER
@@ -88,7 +88,11 @@ class UserProvisionService implements UserProvisionServiceInterface {
         ...$this->mapAuth0ProfileFields($user),
       ]);
 
-    return $this->userLoginFinalize($account, $userId, static::AUTH0_PROVIDER);
+    return $this->externalAuth->userLoginFinalize(
+      $account,
+      $userId,
+      static::AUTH0_PROVIDER
+    );
   }
 
   /**
