@@ -3,3 +3,6 @@ description: "Integrate Auth0 with Drupal."
 core_version_requirement: ^10 || ^11
 php: 8.3
 type: module
+dependencies:
+  - key:key
+  - externalauth:externalauth
