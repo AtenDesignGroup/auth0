@@ -36,4 +36,16 @@ interface UserProvisionServiceInterface {
    */
   public function login(Auth0User $user): ?UserInterface;
 
+  /**
+   * Find Auth0 identifier by email address.
+   *
+   * @param string $email
+   *   The email address to search for.
+   *
+   * @return string|null
+   *   The Auth0 user identifier (sub) if user is Auth0-authenticated,
+   *   null otherwise.
+   */
+  public function findAuth0IdentifierByEmail(string $email): ?string;
+
 }

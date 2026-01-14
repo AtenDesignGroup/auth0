@@ -205,5 +205,20 @@ interface ConfigurationServiceInterface {
    */
   public function getProfileFieldMappingRules(): array;
 
+  /**
+   * Checks if Auth0 password reset feature is enabled.
+   *
+   * @return bool
+   *   TRUE if password reset is enabled, FALSE otherwise.
+   */
+  public function isPasswordResetEnabled(): bool;
+
+  /**
+   * Gets the Auth0 database connection name for password reset.
+   *
+   * @return string
+   *   The Auth0 connection name (default: 'Username-Password-Authentication').
+   */
+  public function getPasswordResetConnection(): string;
 
 }

@@ -38,3 +38,9 @@ auth0.settings:
     auth0_cookie_secret_key:
       type: string
       label: 'Cookie secret key'
+    auth0_password_reset_enabled:
+      type: boolean
+      label: 'Password reset enabled'
+    auth0_password_reset_connection:
+      type: string
+      label: 'Password reset connection'

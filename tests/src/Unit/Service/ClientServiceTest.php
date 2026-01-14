@@ -109,7 +109,7 @@ class ClientServiceTest extends TestCase {
 
     $config = $method->invoke($service);
 
-    $this->assertEquals([], $config);
+    $this->assertNull($config);
   }
 
   /**

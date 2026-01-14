@@ -502,4 +502,95 @@ class ConfigurationServiceTest extends TestCase {
     $this->assertEquals($updatedData, $result2);
   }
 
+  /**
+   * Tests isPasswordResetEnabled returns TRUE when enabled.
+   */
+  public function testIsPasswordResetEnabledWhenTrue(): void {
+    $this->config->method('get')
+      ->willReturnCallback(function() {
+        return [
+          'auth0_password_reset_enabled' => TRUE,
+        ];
+      });
+
+    $this->assertTrue($this->service->isPasswordResetEnabled());
+  }
+
+  /**
+   * Tests isPasswordResetEnabled returns FALSE when disabled.
+   */
+  public function testIsPasswordResetEnabledWhenFalse(): void {
+    $this->config->method('get')
+      ->willReturnCallback(function() {
+        return [
+          'auth0_password_reset_enabled' => FALSE,
+        ];
+      });
+
+    $this->assertFalse($this->service->isPasswordResetEnabled());
+  }
+
+  /**
+   * Tests isPasswordResetEnabled returns FALSE by default.
+   */
+  public function testIsPasswordResetEnabledDefault(): void {
+    $this->config->method('get')
+      ->willReturnCallback(function() {
+        return [];
+      });
+
+    $this->assertFalse($this->service->isPasswordResetEnabled());
+  }
+
+  /**
+   * Tests getPasswordResetConnection returns configured value.
+   */
+  public function testGetPasswordResetConnectionConfigured(): void {
+    $this->config->method('get')
+      ->willReturnCallback(function() {
+        return [
+          'auth0_password_reset_connection' => 'custom-database',
+        ];
+      });
+
+    $this->assertEquals('custom-database', $this->service->getPasswordResetConnection());
+  }
+
+  /**
+   * Tests getPasswordResetConnection returns default value.
+   */
+  public function testGetPasswordResetConnectionDefault(): void {
+    $this->config->method('get')
+      ->willReturnCallback(function() {
+        return [];
+      });
+
+    $this->assertEquals('Username-Password-Authentication', $this->service->getPasswordResetConnection());
+  }
+
+  /**
+   * Tests password reset configuration persistence via setMultiple.
+   */
+  public function testPasswordResetConfigurationPersistence(): void {
+    $values = [
+      'auth0_password_reset_enabled' => TRUE,
+      'auth0_password_reset_connection' => 'my-custom-connection',
+    ];
+
+    $this->editableConfig->expects($this->exactly(2))
+      ->method('set')
+      ->willReturnCallback(function($key, $value) use ($values) {
+        $this->assertArrayHasKey($key, $values);
+        $this->assertEquals($values[$key], $value);
+        return $this->editableConfig;
+      });
+
+    $this->editableConfig->expects($this->once())
+      ->method('save');
+
+    $result = $this->service->setMultiple($values);
+
+    $this->assertInstanceOf(ConfigurationService::class, $result);
+  }
+
 }

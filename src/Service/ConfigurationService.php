@@ -68,6 +68,11 @@ class ConfigurationService implements ConfigurationServiceInterface {
   protected const string AUTH0_DEFAULT_SCOPES = 'openid email profile';
 
   /**
+   * Default password reset connection name.
+   */
+  protected const string DEFAULT_PASSWORD_RESET_CONNECTION = 'Username-Password-Authentication';
+
+  /**
    * The Drupal request.
    *
    * @var \Symfony\Component\HttpFoundation\Request|null
@@ -341,6 +346,20 @@ class ConfigurationService implements ConfigurationServiceInterface {
     return $rules;
   }
 
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isPasswordResetEnabled(): bool {
+    return (bool) $this->get('auth0_password_reset_enabled', FALSE);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPasswordResetConnection(): string {
+    return $this->get('auth0_password_reset_connection', static::DEFAULT_PASSWORD_RESET_CONNECTION);
+  }
 
   /**
    * Loads configuration data with simple caching.

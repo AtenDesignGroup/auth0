@@ -6,6 +6,7 @@ namespace Drupal\auth0\Service;
 
 use Drupal\user\UserInterface;
 use Drupal\auth0\ValueObject\Auth0User;
+use Drupal\externalauth\AuthmapInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\externalauth\ExternalAuthInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -31,12 +32,15 @@ class UserProvisionService implements UserProvisionServiceInterface {
    *   The logger channel for Auth0 operations.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager for role validation.
+   * @param \Drupal\externalauth\AuthmapInterface $authmap
+   *   The authmap service for external authentication mapping.
    */
   public function __construct(
     protected ExternalAuthInterface $externalAuth,
     protected ConfigurationServiceInterface $configurationService,
     protected LoggerChannelInterface $logger,
     protected EntityTypeManagerInterface $entityTypeManager,
+    protected AuthmapInterface $authmap,
   ) {}
 
   /**
@@ -47,6 +51,23 @@ class UserProvisionService implements UserProvisionServiceInterface {
       $identifier,
       static::AUTH0_PROVIDER
     );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function findAuth0IdentifierByEmail(string $email): ?string {
+    $userStorage = $this->entityTypeManager->getStorage('user');
+    $users = $userStorage->loadByProperties(['mail' => $email]);
+
+    if (empty($users)) {
+      return NULL;
+    }
+
+    $user = reset($users);
+    $auth0Identifier = $this->authmap->get((int) $user->id(), static::AUTH0_PROVIDER);
+
+    return $auth0Identifier ?: NULL;
   }
 
   /**
@@ -83,7 +104,7 @@ class UserProvisionService implements UserProvisionServiceInterface {
       static::AUTH0_PROVIDER,
       [
         'name' => $name,
-        'email' => $user->email(),
+        'mail' => $user->email(),
         'roles' => $this->mapAuth0Roles($user),
         ...$this->mapAuth0ProfileFields($user),
       ]);

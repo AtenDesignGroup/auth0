@@ -46,6 +46,13 @@ class ClientService implements ClientServiceInterface {
   ) {
     $this->request = $requestStack->getCurrentRequest();
     $configuration = $this->configuration();
+
+    if (!$configuration instanceof SdkConfiguration) {
+      throw new \RuntimeException(
+        'Auth0 module is not configured. Please configure the Auth0 settings.'
+      );
+    }
+
     $configuration->setTransientStorage(
       new SessionStore($configuration)
     );
@@ -104,15 +111,43 @@ class ClientService implements ClientServiceInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function requestPasswordReset(string $email): bool {
+    try {
+      $connection = $this->configurationService->getPasswordResetConnection();
+
+      $this->client->authentication()->dbConnectionsChangePassword(
+        $email,
+        $connection
+      );
+
+      return TRUE;
+    }
+    catch (\Exception $exception) {
+      $this->logger->error(
+        'Failed to request password reset for @email: @message',
+        [
+          '@email' => $email,
+          '@message' => $exception->getMessage(),
+        ]
+      );
+      return FALSE;
+    }
+  }
+
+  /**
    * Define the Auth0 configuration
    *
-   * @return \Auth0\SDK\Configuration\SdkConfiguration|array
+   * @return \Auth0\SDK\Configuration\SdkConfiguration|null
    */
-  protected function configuration(): SdkConfiguration|array {
+  protected function configuration(): ?SdkConfiguration {
     try {
+      $domain = $this->configurationService->getDomain();
+
       return new SdkConfiguration([
         'scope' => $this->configurationService->getDefaultScopes(),
-        'domain' => $this->configurationService->getDomain(),
+        'domain' => $domain,
         'clientId' => $this->configurationService->getClientId(),
         'clientSecret' => $this->configurationService->getClientSecret(),
         'cookieSecret' => $this->configurationService->getCookieSecret(),
@@ -121,7 +156,7 @@ class ClientService implements ClientServiceInterface {
     }
     catch (\Exception $exception) {
       $this->logger->error($exception->getMessage());
-      return [];
+      return NULL;
     }
   }
 

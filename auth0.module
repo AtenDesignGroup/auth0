@@ -1,0 +1,68 @@
+<?php
+
+/**
+ * @file
+ * Provides Auth0 authentication integration for Drupal.
+ */
+
+declare(strict_types=1);
+
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Implements hook_form_FORM_ID_alter() for user_form.
+ *
+ * Modifies the user edit form for Auth0 users to:
+ * - Hide the native Drupal password fields
+ * - Add a link to request password reset via Auth0
+ */
+function auth0_form_user_form_alter(array &$form, FormStateInterface $form_state): void {
+  $configService = \Drupal::service('auth0.configuration');
+
+  if (!$configService->isPasswordResetEnabled()) {
+    return;
+  }
+
+  $user = $form_state->getFormObject()->getEntity();
+
+  if ($user->isNew()) {
+    return;
+  }
+
+  $userEmail = $user->getEmail();
+
+  if (empty($userEmail)) {
+    return;
+  }
+
+  /** @var \Drupal\auth0\Service\UserProvisionService $userProvisionService */
+  $userProvisionService = \Drupal::service('auth0.user.provision');
+  $auth0Identifier = $userProvisionService->findAuth0IdentifierByEmail($userEmail);
+
+  if ($auth0Identifier === NULL) {
+    return;
+  }
+
+  // Hide password fields for Auth0 users.
+  if (isset($form['account']['pass'])) {
+    $form['account']['pass']['#access'] = FALSE;
+  }
+
+  // Hide current password field (Auth0 users don't have Drupal passwords).
+  if (isset($form['account']['current_pass'])) {
+    $form['account']['current_pass']['#access'] = FALSE;
+  }
+
+  // Add direct Auth0 password reset link.
+  $url = \Drupal::service('url_generator')
+    ->generateFromRoute('auth0.password_reset');
+
+  $form['account']['auth0_password_reset_link'] = [
+    '#type' => 'item',
+    '#title' => t('Password'),
+    '#markup' => t('This account uses Auth0 for authentication. <a href="@url">Send password reset email</a>.', [
+      '@url' => $url,
+    ]),
+    '#weight' => -5,
+  ];
+}

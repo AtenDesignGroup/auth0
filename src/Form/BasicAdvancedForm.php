@@ -123,6 +123,30 @@ class BasicAdvancedForm extends ConfigFormBase {
       ],
     ];
 
+    $form['auth0_password_reset'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Password Reset Settings'),
+      '#open' => FALSE,
+      '#tree' => FALSE,
+    ];
+    $form['auth0_password_reset']['auth0_password_reset_enabled'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enable Auth0 password reset'),
+      '#default_value' => $this->configurationService->isPasswordResetEnabled(),
+      '#description' => $this->t('If checked, Auth0 users will use Auth0 password reset instead of Drupal native password reset.'),
+    ];
+    $form['auth0_password_reset']['auth0_password_reset_connection'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Auth0 database connection name'),
+      '#default_value' => $this->configurationService->getPasswordResetConnection(),
+      '#description' => $this->t('The Auth0 database connection name to use for password reset. Default: Username-Password-Authentication'),
+      '#states' => [
+        'visible' => [
+          ':input[name="auth0_password_reset_enabled"]' => ['checked' => TRUE],
+        ],
+      ],
+    ];
+
     $form['actions']['#type'] = 'actions';
     $form['actions']['submit'] = [
       '#type' => 'submit',
@@ -203,6 +227,8 @@ class BasicAdvancedForm extends ConfigFormBase {
       'auth0_sync_role_mapping' => $form_state->getValue('auth0_sync_role_mapping'),
       'auth0_sync_claim_mapping' => $form_state->getValue('auth0_sync_claim_mapping'),
       'auth0_requires_verified_email' => $form_state->getValue('auth0_requires_verified_email'),
+      'auth0_password_reset_enabled' => $form_state->getValue('auth0_password_reset_enabled'),
+      'auth0_password_reset_connection' => $form_state->getValue('auth0_password_reset_connection'),
     ]);
 
     $this->messenger()->addStatus(

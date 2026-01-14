@@ -51,4 +51,18 @@ interface ClientServiceInterface {
    */
   public function exchange(): ?Auth0User;
 
+  /**
+   * Request a password reset email for an Auth0 user.
+   *
+   * Triggers Auth0's Authentication API to send a password reset email
+   * to the user. Works only for database connections.
+   *
+   * @param string $email
+   *   The user's email address.
+   *
+   * @return bool
+   *   TRUE if the request was successful, FALSE otherwise.
+   */
+  public function requestPasswordReset(string $email): bool;
+
 }

@@ -53,3 +53,13 @@ auth0.advanced_settings:
     _title: 'Auth0 Advanced Settings'
   requirements:
     _permission: 'administer site configuration'
+
+auth0.password_reset:
+  path: '/auth0/password-reset'
+  defaults:
+    _controller: '\Drupal\auth0\Controller\PasswordResetController::requestPasswordReset'
+    _title: 'Request Password Reset'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+  options:
+    no_cache: TRUE

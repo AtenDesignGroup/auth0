@@ -3,8 +3,9 @@
 /web
 /.claude
 CLAUDE.md
-/.agent-os
+/agent-os
 /.editorconfig
 /.gitattributes
 /bin
 /reports
+/recipes

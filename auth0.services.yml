@@ -29,6 +29,7 @@ services:
       - '@auth0.configuration'
       - '@logger.channel.auth0'
       - '@entity_type.manager'
+      - '@externalauth.authmap'
 
   logger.channel.auth0:
     parent: logger.channel_base

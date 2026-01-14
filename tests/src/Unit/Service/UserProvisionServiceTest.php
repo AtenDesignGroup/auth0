@@ -28,6 +28,7 @@ class UserProvisionServiceTest extends TestCase {
   private ConfigurationService|MockObject $configurationService;
   private LoggerChannelInterface|MockObject $logger;
   private EntityTypeManagerInterface|MockObject $entityTypeManager;
+  private MockObject $authmap;
   private UserProvisionService $service;
 
   /**
@@ -40,12 +41,14 @@ class UserProvisionServiceTest extends TestCase {
     $this->configurationService = $this->createMock(ConfigurationService::class);
     $this->logger = $this->createMock(LoggerChannelInterface::class);
     $this->entityTypeManager = $this->createMock(EntityTypeManagerInterface::class);
+    $this->authmap = $this->createMock('\Drupal\externalauth\AuthmapInterface');
 
     $this->service = new UserProvisionService(
       $this->externalAuth,
       $this->configurationService,
       $this->logger,
-      $this->entityTypeManager
+      $this->entityTypeManager,
+      $this->authmap
     );
   }
 
@@ -191,7 +194,7 @@ class UserProvisionServiceTest extends TestCase {
         'auth0',
         [
           'name' => 'John Doe',
-          'email' => 'john@example.com',
+          'mail' => 'john@example.com',
           'roles' => ['authenticated'],
           'field_first_name' => 'John',
         ]
@@ -461,7 +464,7 @@ class UserProvisionServiceTest extends TestCase {
       'given_name' => 'John',
       'uid' => '123',  // This should be restricted
     ];
-    
+
     $auth0User = Auth0User::make($userInfo);
     $user = $this->createMock(UserInterface::class);
 
@@ -492,8 +495,180 @@ class UserProvisionServiceTest extends TestCase {
     $method->setAccessible(true);
 
     $result = $method->invoke($this->service, $user, $auth0User);
-    
+
     $this->assertTrue($result);
+  }
+
+  /**
+   * Tests finding Auth0 identifier by email for Auth0 user.
+   */
+  public function testFindAuth0IdentifierByEmailSuccess(): void {
+    $email = 'john@example.com';
+    $expectedAuth0Id = 'auth0|123456';
+
+    $mockUser = $this->createMock(UserInterface::class);
+    $mockUser->method('id')->willReturn(42);
+
+    $mockStorage = $this->createMock('\Drupal\Core\Entity\EntityStorageInterface');
+    $mockStorage->expects($this->once())
+      ->method('loadByProperties')
+      ->with(['mail' => $email])
+      ->willReturn([$mockUser]);
+
+    $this->entityTypeManager->expects($this->once())
+      ->method('getStorage')
+      ->with('user')
+      ->willReturn($mockStorage);
+
+    $this->authmap->expects($this->once())
+      ->method('get')
+      ->with(42, 'auth0')
+      ->willReturn($expectedAuth0Id);
+
+    $result = $this->service->findAuth0IdentifierByEmail($email);
+
+    $this->assertSame($expectedAuth0Id, $result);
+  }
+
+  /**
+   * Tests finding Auth0 identifier by email when user is not Auth0-authenticated.
+   */
+  public function testFindAuth0IdentifierByEmailNonAuth0User(): void {
+    $email = 'native@example.com';
+
+    $mockUser = $this->createMock(UserInterface::class);
+    $mockUser->method('id')->willReturn(42);
+
+    $mockStorage = $this->createMock('\Drupal\Core\Entity\EntityStorageInterface');
+    $mockStorage->expects($this->once())
+      ->method('loadByProperties')
+      ->with(['mail' => $email])
+      ->willReturn([$mockUser]);
+
+    $this->entityTypeManager->expects($this->once())
+      ->method('getStorage')
+      ->with('user')
+      ->willReturn($mockStorage);
+
+    $this->authmap->expects($this->once())
+      ->method('get')
+      ->with(42, 'auth0')
+      ->willReturn(FALSE);
+
+    $result = $this->service->findAuth0IdentifierByEmail($email);
+
+    $this->assertNull($result);
+  }
+
+  /**
+   * Tests finding Auth0 identifier by email when email not found.
+   */
+  public function testFindAuth0IdentifierByEmailNotFound(): void {
+    $email = 'nonexistent@example.com';
+
+    $mockStorage = $this->createMock('\Drupal\Core\Entity\EntityStorageInterface');
+    $mockStorage->expects($this->once())
+      ->method('loadByProperties')
+      ->with(['mail' => $email])
+      ->willReturn([]);
+
+    $this->entityTypeManager->expects($this->once())
+      ->method('getStorage')
+      ->with('user')
+      ->willReturn($mockStorage);
+
+    $this->authmap->expects($this->never())
+      ->method('get');
+
+    $result = $this->service->findAuth0IdentifierByEmail($email);
+
+    $this->assertNull($result);
+  }
+
+  /**
+   * Tests finding Auth0 identifier by email with multiple users (edge case).
+   */
+  public function testFindAuth0IdentifierByEmailMultipleUsers(): void {
+    $email = 'duplicate@example.com';
+    $expectedAuth0Id = 'auth0|first-user';
+
+    $mockUser1 = $this->createMock(UserInterface::class);
+    $mockUser1->method('id')->willReturn(42);
+
+    $mockUser2 = $this->createMock(UserInterface::class);
+    $mockUser2->method('id')->willReturn(43);
+
+    $mockStorage = $this->createMock('\Drupal\Core\Entity\EntityStorageInterface');
+    $mockStorage->expects($this->once())
+      ->method('loadByProperties')
+      ->with(['mail' => $email])
+      ->willReturn([$mockUser1, $mockUser2]);
+
+    $this->entityTypeManager->expects($this->once())
+      ->method('getStorage')
+      ->with('user')
+      ->willReturn($mockStorage);
+
+    $this->authmap->expects($this->once())
+      ->method('get')
+      ->with(42, 'auth0')
+      ->willReturn($expectedAuth0Id);
+
+    $result = $this->service->findAuth0IdentifierByEmail($email);
+
+    $this->assertSame($expectedAuth0Id, $result);
+  }
+
+  /**
+   * Tests finding Auth0 identifier by email with empty email string.
+   */
+  public function testFindAuth0IdentifierByEmailEmptyString(): void {
+    $email = '';
+
+    $mockStorage = $this->createMock('\Drupal\Core\Entity\EntityStorageInterface');
+    $mockStorage->expects($this->once())
+      ->method('loadByProperties')
+      ->with(['mail' => $email])
+      ->willReturn([]);
+
+    $this->entityTypeManager->expects($this->once())
+      ->method('getStorage')
+      ->with('user')
+      ->willReturn($mockStorage);
+
+    $result = $this->service->findAuth0IdentifierByEmail($email);
+
+    $this->assertNull($result);
+  }
+
+  /**
+   * Tests finding Auth0 identifier by email when authmap returns null authname.
+   */
+  public function testFindAuth0IdentifierByEmailAuthmapReturnsNull(): void {
+    $email = 'user@example.com';
+
+    $mockUser = $this->createMock(UserInterface::class);
+    $mockUser->method('id')->willReturn(42);
+
+    $mockStorage = $this->createMock('\Drupal\Core\Entity\EntityStorageInterface');
+    $mockStorage->expects($this->once())
+      ->method('loadByProperties')
+      ->with(['mail' => $email])
+      ->willReturn([$mockUser]);
+
+    $this->entityTypeManager->expects($this->once())
+      ->method('getStorage')
+      ->with('user')
+      ->willReturn($mockStorage);
+
+    $this->authmap->expects($this->once())
+      ->method('get')
+      ->with(42, 'auth0')
+      ->willReturn(NULL);
+
+    $result = $this->service->findAuth0IdentifierByEmail($email);
+
+    $this->assertNull($result);
   }
 
 }
