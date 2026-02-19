@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\auth0\Service;
 
 use Auth0\SDK\Auth0;
+use Auth0\SDK\Contract\API\ManagementInterface;
 use Auth0\SDK\Store\SessionStore;
 use Auth0\SDK\Contract\StoreInterface;
 use Drupal\auth0\ValueObject\Auth0User;
@@ -134,6 +135,13 @@ class ClientService implements ClientServiceInterface {
       );
       return FALSE;
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function management(): ManagementInterface {
+    return $this->client->management();
   }
 
   /**

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\auth0\Contracts;
 
+use Auth0\SDK\Contract\API\ManagementInterface;
 use Drupal\auth0\ValueObject\Auth0User;
 
 /**
@@ -64,5 +65,15 @@ interface ClientServiceInterface {
    *   TRUE if the request was successful, FALSE otherwise.
    */
   public function requestPasswordReset(string $email): bool;
+
+  /**
+   * Get the Auth0 Management API client.
+   *
+   * @return \Auth0\SDK\Contract\API\ManagementInterface
+   *   The Management API client for user operations.
+   *
+   * @throws \Auth0\SDK\Exception\ConfigurationException
+   */
+  public function management(): ManagementInterface;
 
 }
